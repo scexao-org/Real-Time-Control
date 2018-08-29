@@ -1,0 +1,7 @@
+#!/bin/bash
+
+SF="dmmonstartup"
+echo "readshmim $1" > $SF 
+echo "aoloopcontroldmcombmon" >> $SF
+echo "exit" >> $SF
+ cacao -n $0 -f dmmonfifo -s $SF

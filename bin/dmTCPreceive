@@ -1,0 +1,49 @@
+#!/bin/bash
+
+tmux new-session -d -s dmTCPrcv
+tmux split-window -v
+tmux split-window -h
+tmux select-pane -t 0
+tmux split-window -h
+tmux select-pane -t 0
+tmux split-window -v
+tmux select-pane -t 2
+tmux split-window -v
+tmux select-pane -t 4
+tmux split-window -v
+tmux select-pane -t 6
+tmux split-window -v
+tmux split-window -v
+tmux split-window -v
+tmux split-window -v
+tmux split-window -v
+tmux select-layout even-vertical
+
+
+
+
+tmux select-pane -t 0
+tmux send-keys "shmimTCPreceive 30010" C-m
+tmux select-pane -t 1
+tmux send-keys "shmimTCPreceive 30011" C-m
+tmux select-pane -t 2
+tmux send-keys "shmimTCPreceive 30012" C-m
+tmux select-pane -t 3
+tmux send-keys "shmimTCPreceive 30013" C-m
+tmux select-pane -t 4
+tmux send-keys "shmimTCPreceive 30014" C-m
+tmux select-pane -t 5
+tmux send-keys "shmimTCPreceive 30015" C-m
+tmux select-pane -t 6
+tmux send-keys "shmimTCPreceive 30016" C-m
+tmux select-pane -t 7
+tmux send-keys "shmimTCPreceive 30017" C-m
+tmux select-pane -t 8
+tmux send-keys "shmimTCPreceive 30018" C-m
+tmux select-pane -t 9
+tmux send-keys "shmimTCPreceive 30019" C-m
+tmux select-pane -t 10
+tmux send-keys "shmimTCPreceive 30020" C-m
+tmux select-pane -t 11
+tmux send-keys "shmimTCPreceive 30021" C-m
+

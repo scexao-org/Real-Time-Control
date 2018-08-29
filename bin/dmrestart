@@ -1,0 +1,258 @@
+#!/bin/bash
+
+
+
+
+# number of arguments to script
+NBARGS=0
+
+
+# ======================= PROCESS NAME =================================
+pname=`echo "$0" | sed "s/\.\///g"`
+
+
+
+
+
+function printHELP {
+echo "------------------------------------------------------------------------"
+echo "$(tput bold) $pname : (RE-)START DM $(tput sgr0)"
+echo "------------------------------------------------------------------------"
+echo "  (re)start deformable mirorr"
+echo "   "
+echo " $(tput bold)USAGE:$(tput sgr0)"
+echo "     $0 [-hk]"
+echo ""
+echo " $(tput bold)OPTIONS:$(tput sgr0)"
+echo "     $(tput bold)-h$(tput sgr0)          help"
+echo "     $(tput bold)-k$(tput sgr0)          kill DM processes but do not restart"
+echo "     $(tput bold)-c$(tput sgr0)          kill only DM connections to scexaoCTRL"
+echo "     $(tput bold)-C$(tput sgr0)          restart only DM connections to scexaoCTRL"
+echo ""
+echo ""
+echo "------------------------------------------------------------------------"
+}
+
+
+printHELP1 ()
+{
+    printf "%20s       (Re-)start DM processes\n" "$0" 
+}
+
+
+EXITSTATUS=0
+
+
+function cmdexists()
+{
+  command -v "$1" >/dev/null 2>&1
+}
+
+
+function checkCommand {
+if cmdexists $1; then
+    echo "[$(tput setaf 2)$(tput bold)   OK   $(tput sgr0)] Command $(tput bold)$1$(tput sgr0) found"
+else
+    echo "[$(tput setaf 1)$(tput bold) FAILED $(tput sgr0)] Command $(tput bold)$1$(tput sgr0) not installed.  Aborting."; EXITSTATUS=1;
+fi
+
+}
+
+
+
+
+
+
+# ================= OPTIONS =============================
+
+
+
+
+# Transform long options to short ones
+singlelinehelp=0
+for arg in "$@"; do
+  shift
+  case "$arg" in
+    "--help") set -- "$@" "-h" ;;
+    "--help1") 
+set -- "$@" "-h" 
+singlelinehelp=1;
+;;
+    *)        set -- "$@" "$arg"
+  esac
+done
+
+
+KILLMAIN="1"
+RESTARTMAIN="1"
+KILLCONN="1"
+RESTARTCONN="1"
+
+#Parse command line flags
+while getopts :hkcC FLAG; do
+  case $FLAG in
+    h)  #show help
+      if [ "$singlelinehelp" -eq "0" ]; then
+      printHELP
+      else
+      printHELP1
+      fi
+      exit
+      ;;
+    k) # kill DM processes but do not restart
+	KILLMAIN="1"
+	RESTARTMAIN="0"
+	KILLCONN="1"
+	RESTARTCONN="0"
+    ;;
+    c)
+    KILLMAIN="0"
+    RESTARTMAIN="0"
+    KILLCONN="1"
+    RESTARTCONN="0"
+    ;;
+    C)
+    KILLMAIN="0"
+    RESTARTMAIN="0"
+    KILLCONN="1"
+    RESTARTCONN="1"
+    ;;
+    \?) #unrecognized option - show help
+      echo -e \\n"Option -${BOLD}$OPTARG${NORM} not allowed."
+      printHELP
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))  #This tells getopts to move on to the next argument.
+
+### End getopts code ###
+
+
+
+
+
+
+
+
+if [ "$1" = "help" ] || [ "$#" -ne $NBARGS ]; then
+if [ "$#" -ne $NBARGS ]; then
+    echo "$(tput setaf 1)$(tput bold) Illegal number of parameters ($NBARGS params required, $# entered) $(tput sgr0)"
+fi
+printHELP
+        exit
+fi
+
+
+
+# ======================= CHECK REQUIRED FILES =================================
+echo ""
+
+
+
+# ============================= CHECK IF COMMAND EXISTS ==========================
+
+checkCommand cacao
+
+
+
+
+
+
+if [ $EXITSTATUS -eq 1 ]; then
+echo ""
+echo "$(tput setaf 1)$(tput bold) REQUIRED FILES, COMMANDS NOT FOUND: EXITING $(tput sgr0)"
+echo ""
+exit
+else
+echo ""
+fi
+
+
+
+
+
+
+
+
+
+
+
+if [ "$KILLCONN" = "1" ]; then
+echo "[1] killing scexoCTRL connection"
+ssh scexao@scexaoCTRL "LD_LIBRARY_PATH=$LD_LIBRARY_PATH /home/scexao/bin/dmTCPsend_kill"
+fi
+
+
+if [ "$RESTARTMAIN" = "1" ]; then
+sleep 6
+echo "[2] initialize shared mem strucutres ..."
+ssh scexao@scexaoCTRL "LD_LIBRARY_PATH=$LD_LIBRARY_PATH /home/scexao/bin/dmshminit"
+fi
+
+
+if [ "$KILLMAIN" = "1" ]; then
+echo "[3] kill dm00comb"
+pkill -9 dm00comb
+tmux kill-session -t dm00comb
+fi
+
+
+if [ "$RESTARTMAIN" = "1" ]; then
+echo "[4] restart dm00comb"
+tmux new-session -d -s dm00comb
+tmux send-keys -t dm00comb "dmcomb 00 120.0" C-m
+sleep 1
+pkill -9 dm00comb
+sleep 1
+fi
+
+
+if [ "$KILLCONN" = "1" ]; then
+echo "[5] kill dmTCPrcv"
+tmux kill-session -t "dmTCPrcv-0"
+tmux kill-session -t "dmTCPrcv-1"
+fi
+
+if [ "$RESTARTCONN" = "1" ]; then
+echo "[6] start dmTCPrcv and dmTCPsendp"
+dmTCPreceivep 0
+dmTCPreceivep 1
+sleep 3
+ssh scexao@scexaoCTRL "LD_LIBRARY_PATH=$LD_LIBRARY_PATH /home/scexao/bin/dmTCPsendp"
+sleep 5
+fi
+
+if [ "$RESTARTMAIN" = "1" ]; then
+echo "[7] restart dmcomb"
+echo "Create tmux session to control DM ..."
+tmux new-session -d -s dm00comb
+tmux send-keys -t dm00comb "dmcomb 00 120.0" C-m
+fi
+
+
+if [ "$KILLMAIN" = "1" ]; then
+echo "[8] kill dmopttrig"
+sudo pkill bmc
+tmux kill-session -t dmopttrig
+fi
+
+
+if [ "$RESTARTMAIN" = "1" ]; then
+echo "[9] Start DM optical link interface ..."
+sleep 1
+tmux new-session -d -s dmopttrig
+tmux send-keys -t dmopttrig "cd /home/scexao/src/DMoptical/bin" C-m
+tmux send-keys -t dmopttrig "sudo insmod bmc_mdrv.ko" C-m
+tmux send-keys -t dmopttrig "sudo -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH} ./runBMCcacao -K" C-m
+sleep 0.5
+tmux send-keys -t dmopttrig "sudo -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH} ./runBMCcacao -D 0" C-m
+sleep 0.5
+tmux send-keys -t dmopttrig "sudo -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH} ./runBMCcacao -L" C-m
+sleep 0.5
+pidlist=$( pgrep runBMCcacao|xargs echo | sed 's/ /,/g' )
+sudo cset proc -m -p $pidlist -t dmdrv
+fi
+
+
+

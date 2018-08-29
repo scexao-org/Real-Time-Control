@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cacao << EOF
+loadfits "$1" im
+aollogprocmodeval im
+exit
+EOF
+
+
+
+

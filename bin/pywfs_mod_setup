@@ -1,0 +1,5 @@
+#!/bin/bash 
+cmdstr="/home/scexao/bin/devices/pywfs_mod_setup $@"
+echo "Executing on scexao2: $cmdstr"
+ssh scexao@scexao2 "$cmdstr" &
+

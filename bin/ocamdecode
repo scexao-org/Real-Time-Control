@@ -1,0 +1,27 @@
+#!/bin/bash
+
+sudo pkill ocamrundec
+
+cd /home/scexao/AOloop/Pyramid/
+rm ocam2dsliceind.fits &> /dev/null
+
+tmux kill-session -t ocamdecode &> /dev/null
+tmux new-session -d -s ocamdecode
+tmux send-keys -t ocamdecode "cacao -n ocamrundec" C-m
+tmux send-keys -t ocamdecode "readshmim ocam2krc" C-m
+tmux send-keys -t ocamdecode "loadfits \"ocam2kpixi.fits\" ocam2kpixi" C-m
+tmux send-keys -t ocamdecode "impixdecodeU ocam2krc 120 120 pixsliceNB.txt ocam2kpixi ocam2d ocam2dsliceind.fits" C-m
+tmux send-keys -t ocamdecode "exitCLI" C-m
+tmux send-keys -t ocamdecode "EOF" C-m
+
+sleep 2
+pidlist=$( pgrep ocamrundec|xargs echo | sed 's/ /,/g' )
+#echo $pidlist
+sudo chrt -f -p 80 $pidlist
+
+pidlist=$( pgrep ocamrundec|xargs echo | sed 's/ /,/g' )
+sudo cset proc -m -p $pidlist -t aol0COM > /dev/null
+
+
+ln -fs ocam2dsliceind.fits pixstream_wfspixindex.fits
+

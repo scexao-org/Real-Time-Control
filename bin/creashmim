@@ -1,0 +1,7 @@
+#!/bin/bash
+
+cacao << EOF
+readshmim $1
+creaimshm $@
+exit
+EOF

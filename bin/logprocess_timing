@@ -1,0 +1,5 @@
+#!/bin/bash
+
+sed 's/:/ /g' $1 | awk '{printf("%.9f\n",$1*3600+$2*60+$3)}' | awk 'p{print NR, $1, $1-p}{p=$1}' > $1.1
+
+

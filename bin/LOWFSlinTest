@@ -1,0 +1,210 @@
+#!/bin/bash
+
+EXPECTED_ARGS=2
+
+
+
+RAMPFILE="/home/scexao/conf/dm_patterns/LOWFSlinRamp.fits"
+
+function printHELP {
+echo "------------------------------------------------------------------------"
+echo "$(tput bold) $0 : INSERT LINEARITY TEST RAMP INTO LOWFS $(tput sgr0)"
+echo "------------------------------------------------------------------------"
+echo "  Start/Stop lin ramp"
+echo " Input ramp file :"
+echo "   $RAMPFILE"
+echo "   "
+echo " $(tput bold)USAGE:$(tput sgr0)"
+echo "     $0 [options] <ampl [um]> <freq [Hz]>"
+echo "     $0 -k"
+echo ""
+echo " $(tput bold)OPTIONS:$(tput sgr0)"
+echo "     $(tput bold)-h$(tput sgr0)             help"
+echo "     $(tput bold)-f$(tput sgr0) <file>      Ramp file"
+echo "     $(tput bold)-k$(tput sgr0)             Stop ramp (default: start)"
+echo "     $(tput bold)-n$(tput sgr0) <NBcycle>   number cycles (default=1)"
+echo ""
+echo " $(tput bold)INPUT:$(tput sgr0)"
+echo "     <ampl [um]>     ramp amplitude [um]"
+echo "     <freq [Hz]>     modulation frequency [Hz]"
+echo ""
+echo " $(tput bold)EXAMPLE:$(tput sgr0)"
+echo "		$0 0.01 50"
+echo "		$0 -k"
+echo ""
+echo "------------------------------------------------------------------------"
+}
+
+
+printHELP1 ()
+{
+    printf "%20s       LOWFS linearity ramp start/stop\n" "$0" 
+}
+
+
+
+EXITSTATUS=0
+
+function checkFile {
+if [ -f $1 ]
+  then
+    echo "[$(tput setaf 2)$(tput bold)   OK   $(tput sgr0)] File $(tput bold)$1$(tput sgr0) found"
+   else
+    echo "[$(tput setaf 1)$(tput bold) FAILED $(tput sgr0)] File $(tput bold)$1$(tput sgr0) not found"
+    EXITSTATUS=1
+fi
+}
+
+function checkDir {
+if [ -d $1 ]
+  then
+    echo "[$(tput setaf 2)$(tput bold)   OK   $(tput sgr0)] Directory $(tput bold)$1$(tput sgr0) found"
+   else
+    echo "[$(tput setaf 1)$(tput bold) FAILED $(tput sgr0)] Directory $(tput bold)$1$(tput sgr0) not found"
+    EXITSTATUS=1
+fi
+}
+
+function cmdexists()
+{
+  command -v "$1" >/dev/null 2>&1
+}
+
+
+function checkCommand {
+if cmdexists $1; then
+    echo "[$(tput setaf 2)$(tput bold)   OK   $(tput sgr0)] Command $(tput bold)$1$(tput sgr0) found"
+else
+    echo "[$(tput setaf 1)$(tput bold) FAILED $(tput sgr0)] Command $(tput bold)$1$(tput sgr0) not installed.  Aborting."; EXITSTATUS=1;
+fi
+
+}
+
+
+# ================= OPTIONS =============================
+
+
+
+
+# Transform long options to short ones
+singlelinehelp=0
+for arg in "$@"; do
+  shift
+  case "$arg" in
+    "--help") set -- "$@" "-h" ;;
+    "--help1") 
+set -- "$@" "-h" 
+singlelinehelp=1;
+;;
+    *)        set -- "$@" "$arg"
+  esac
+done
+
+
+
+STOPAG="0"
+NBcycle="1"
+
+while getopts :hkn:f: FLAG; do
+  case $FLAG in
+    h)  #show help
+      if [ "$singlelinehelp" -eq "0" ]; then
+      printHELP
+      else
+      printHELP1
+      fi
+      exit
+      ;;
+    k) # stop ramp
+    EXPECTED_ARGS=0
+    STOPAG="1"
+    ;;
+    n)
+    NBcycle="$OPTARG"
+    ;;
+    f)
+    RAMPFILE="$OPTARG"
+    ;;
+    \?) #unrecognized option - show help
+      echo -e \\n"Option -${BOLD}$OPTARG${NORM} not allowed."
+      printHELP
+      ;;
+  esac
+done
+
+shift $((OPTIND-1)) 
+### End getopts code ###
+
+
+
+
+
+
+#if [ "$1" = "help" ] || [ "$#" -ne $NBARGS ]; then
+#if [ "$#" -ne $NBARGS ]; then
+#    echo "$(tput setaf 1)$(tput bold) Illegal number of parameters ($NBARGS params required, $# entered) $(tput sgr0)"
+#fi
+#printHELP
+#        exit
+#fi
+
+
+
+
+if [ "$EXPECTED_ARGS" -ne "0" ]; then
+
+if [ "$1" = "help" ] || [ "$#" -ne $EXPECTED_ARGS ]; then
+if [ "$#" -ne $NBARGS ]; then
+    echo "$(tput setaf 1)$(tput bold) Illegal number of parameters ($NBARGS params required, $# entered) $(tput sgr0)"
+fi
+printHELP
+        exit
+fi
+fi
+
+
+# ======================= CHECK REQUIRED FILES =================================
+echo ""
+checkFile $RAMPFILE
+
+
+
+# ============================= CHECK IF COMMAND EXISTS ==========================
+
+checkCommand cacao
+
+
+
+
+tmuxsession="lowfsramp"
+
+
+
+if [ "$STOPAG" = "0" ]; then
+
+dologext "LOWFS RAMP ON  amp = $1 um  speed = $2 Hz" &
+
+tmux kill-session -t ${tmuxsession} &> /dev/null
+tmux new-session -d -s ${tmuxsession} 
+tmux send-keys -t ${tmuxsession} "cacao" C-m
+tmux send-keys -t ${tmuxsession} "readshmim dm01disp02" C-m
+
+tmux send-keys -t ${tmuxsession} "loadfits \"$RAMPFILE\" ramp0c" C-m
+tmux send-keys -t ${tmuxsession} "rampc=ramp0c*$1" C-m
+#tmux send-keys -t ${tmuxsession} "savefits rampc \"!rampc.fits\"" C-m
+tmux send-keys -t ${tmuxsession} "tus=1000000/$2" C-m
+tmux send-keys -t ${tmuxsession} "creaimstream rampc dm01disp02 tus 1 1 0 insync 1 0" C-m
+tmux send-keys -t ${tmuxsession} "exitCLI" C-m
+
+else
+
+dologext "LOWFS RAMP OFF" &
+
+tmux send-keys -t ${tmuxsession} "" C-c
+tmux send-keys -t ${tmuxsession} "exitCLI" C-m
+tmux kill-session -t ${tmuxsession} &> /dev/null
+
+dmdispzero 01 02
+
+
+fi

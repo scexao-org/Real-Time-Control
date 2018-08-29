@@ -1,0 +1,8 @@
+#!/bin/bash
+
+tmux new-session -d -s lowfsimTCPrcv
+tmux send-keys -t lowfsimTCPrcv "shmimTCPreceive 30101" C-m
+
+
+sleep 3
+ssh scexao@scexao2 "/home/scexao/bin/lowfsimTCPsend"

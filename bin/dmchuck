@@ -1,0 +1,7 @@
+cacao << EOF
+loadfits "/home/scexao/conf/dm_patterns/chuck2.fits" dmf
+dm2=0.001*dmf
+readshmim dm00disp04
+cp dmf2 dm00disp04
+exit
+EOF

@@ -1,0 +1,19 @@
+#! /bin/bash
+
+EXPECTED_ARGS=1
+if [ $# -ne $EXPECTED_ARGS ]
+then
+  echo
+  echo " ---------- check shared memory image ----------- "
+  echo
+  echo " Usage:  $0 <shm stream>"
+  echo 
+exit
+fi
+
+pname=$0
+cacao -n $pname << EOF
+readshmim $1
+listim
+exit
+EOF

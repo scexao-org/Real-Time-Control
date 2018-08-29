@@ -1,0 +1,5 @@
+cacao << EOF
+readshmim dmvolt
+imzero dmvolt
+quit
+EOF

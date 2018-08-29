@@ -1,0 +1,5 @@
+echo "Starting astromgrid 50nm"
+echo "Speckle contrast at 1.55um = 9.960e-4 at 6.66 kHz"
+echo "Type astromgrid -k  to turn off"
+
+/home/scexao/bin/astromgrid -m 0 -b 2 -n 1 0.025 2000 

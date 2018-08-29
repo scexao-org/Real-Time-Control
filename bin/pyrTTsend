@@ -1,0 +1,5 @@
+#!/bin/bash
+
+tmux new-session -d -s pyrTTsend
+tmux send-keys -t pyrTTsend "shmimTCPtransmit pyrTT 10.20.20.1 30110" C-m
+

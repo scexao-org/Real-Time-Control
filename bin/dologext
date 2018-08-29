@@ -1,0 +1,1 @@
+ssh scexao@scexao2 "/home/scexao/bin/log $@"

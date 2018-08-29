@@ -1,0 +1,18 @@
+#! /bin/bash
+
+EXPECTED_ARGS=2
+
+if [ $# -ne $EXPECTED_ARGS ]
+then
+  echo
+  echo "-------- SET DM DISPLACEMENT CHANNEL GAIN ----------"
+ echo " "
+ echo "Usage: $0 <ch#> <gain>"
+ echo " "
+ exit
+fi
+
+cacao -n $0 << EOF
+aolcontroldmchgain $1 $2
+exit
+EOF

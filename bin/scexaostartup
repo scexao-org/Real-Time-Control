@@ -1,0 +1,8 @@
+vncserver -geometry 1800x1000 -depth 24
+sleep 10
+vncserver -geometry 1800x1000 -depth 24
+sleep 10
+vncserver -geometry 1800x1000 -depth 24
+
+sudo ethtool -C eth4 rx-usecs 0
+sudo ethtool -C eth5 rx-usecs 0

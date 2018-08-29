@@ -1,0 +1,7 @@
+cacao << EOF
+loadfits "$1" im
+saveflfits im "!tmpfits.fits"
+exit
+EOF
+mv tmpfits.fits $1
+

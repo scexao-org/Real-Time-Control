@@ -1,0 +1,188 @@
+#!/bin/bash
+
+EXPECTED_ARGS=3
+
+
+
+function printHELP {
+echo "------------------------------------------------------------------------"
+echo "$(tput bold) $0 : TEST DM SPEED $(tput sgr0)"
+echo "------------------------------------------------------------------------"
+echo "  write circular TT to DM"
+echo "   "
+echo " $(tput bold)USAGE:$(tput sgr0)"
+echo "     $0 [-h] <ampl [um]> <NBpt> <freq [Hz]>"
+echo "     $0 -k"
+echo ""
+echo " $(tput bold)OPTIONS:$(tput sgr0)"
+echo "     $(tput bold)-h$(tput sgr0)          help"
+echo "     $(tput bold)-k$(tput sgr0)          Stop TT circ (default: start)"
+echo ""
+echo " $(tput bold)INPUT:$(tput sgr0)"
+echo "     <ampl [um]>     modulation amplitude [um]"
+echo "     <NBpt>          Number of points"
+echo "     <freq [Hz]>     modulation frequency [Hz]"
+echo ""
+echo " $(tput bold)EXAMPLE:$(tput sgr0)"
+echo "		$0 0.1 20 1000"
+echo "		$0 -k"
+echo ""
+echo "------------------------------------------------------------------------"
+}
+
+
+printHELP1 ()
+{
+    printf "%20s       Astrogrid start/stop\n" "$0" 
+}
+
+
+
+EXITSTATUS=0
+
+function checkFile {
+if [ -f $1 ]
+  then
+    echo "[$(tput setaf 2)$(tput bold)   OK   $(tput sgr0)] File $(tput bold)$1$(tput sgr0) found"
+   else
+    echo "[$(tput setaf 1)$(tput bold) FAILED $(tput sgr0)] File $(tput bold)$1$(tput sgr0) not found"
+    EXITSTATUS=1
+fi
+}
+
+function checkDir {
+if [ -d $1 ]
+  then
+    echo "[$(tput setaf 2)$(tput bold)   OK   $(tput sgr0)] Directory $(tput bold)$1$(tput sgr0) found"
+   else
+    echo "[$(tput setaf 1)$(tput bold) FAILED $(tput sgr0)] Directory $(tput bold)$1$(tput sgr0) not found"
+    EXITSTATUS=1
+fi
+}
+
+function cmdexists()
+{
+  command -v "$1" >/dev/null 2>&1
+}
+
+
+function checkCommand {
+if cmdexists $1; then
+    echo "[$(tput setaf 2)$(tput bold)   OK   $(tput sgr0)] Command $(tput bold)$1$(tput sgr0) found"
+else
+    echo "[$(tput setaf 1)$(tput bold) FAILED $(tput sgr0)] Command $(tput bold)$1$(tput sgr0) not installed.  Aborting."; EXITSTATUS=1;
+fi
+
+}
+
+
+# ================= OPTIONS =============================
+
+
+
+
+# Transform long options to short ones
+singlelinehelp=0
+for arg in "$@"; do
+  shift
+  case "$arg" in
+    "--help") set -- "$@" "-h" ;;
+    "--help1") 
+set -- "$@" "-h" 
+singlelinehelp=1;
+;;
+    *)        set -- "$@" "$arg"
+  esac
+done
+
+
+
+STOPAG="0"
+while getopts :hk FLAG; do
+  case $FLAG in
+    h)  #show help
+      if [ "$singlelinehelp" -eq "0" ]; then
+      printHELP
+      else
+      printHELP1
+      fi
+      exit
+      ;;
+    k) # stop TT circ
+    EXPECTED_ARGS=0
+    STOPAG="1"
+    ;;
+    \?) #unrecognized option - show help
+      echo -e \\n"Option -${BOLD}$OPTARG${NORM} not allowed."
+      printHELP
+      ;;
+  esac
+done
+
+shift $((OPTIND-1)) 
+### End getopts code ###
+
+
+
+
+
+
+
+
+
+
+if [ "$EXPECTED_ARGS" -ne "0" ]; then
+
+if [ "$1" = "help" ] || [ "$#" -ne $EXPECTED_ARGS ]; then
+if [ "$#" -ne $NBARGS ]; then
+    echo "$(tput setaf 1)$(tput bold) Illegal number of parameters ($NBARGS params required, $# entered) $(tput sgr0)"
+fi
+printHELP
+        exit
+fi
+fi
+
+
+# ======================= CHECK REQUIRED FILES =================================
+echo ""
+
+
+
+# ============================= CHECK IF COMMAND EXISTS ==========================
+
+checkCommand cacao
+
+
+
+
+
+tmuxsession="dmTTcirc"
+
+
+
+
+
+
+
+if [ "$STOPAG" = "0" ]; then
+
+
+
+tmux kill-session -t ${tmuxsession} &> /dev/null
+tmux new-session -d -s ${tmuxsession} 
+tmux send-keys -t ${tmuxsession} "cacao" C-m
+tmux send-keys -t ${tmuxsession} "readshmim dm00disp09" C-m
+tmux send-keys -t ${tmuxsession} "aoloopcontroldmmkttcirc TTcirc 0 $2 $1" C-m
+tmux send-keys -t ${tmuxsession} "tus=1000000/$3" C-m
+tmux send-keys -t ${tmuxsession} "creaimstream TTcirc dm00disp09 tus" C-m
+tmux send-keys -t ${tmuxsession} "exitCLI" C-m
+
+else
+
+tmux send-keys -t ${tmuxsession} "" C-c
+tmux send-keys -t ${tmuxsession} "exitCLI" C-m
+tmux send-keys -t ${tmuxsession} "exit" C-m
+tmux kill-session -t ${tmuxsession} &> /dev/null
+dmdispzero 00 09
+
+fi

@@ -1,0 +1,5 @@
+astromgrid -m 0 -b 2 -l -n 4 0.05 2000
+
+
+astromgrid -S ircam0 -o 0 -A 3 -B 4 -b 1 -l -n 1 0.05 3192.569 
+

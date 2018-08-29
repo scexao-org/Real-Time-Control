@@ -1,0 +1,77 @@
+#!/usr/bin/python
+
+import os
+import sys
+import time
+from pyqtgraph.Qt import QtGui, QtCore
+import numpy as np
+import pyqtgraph as pg
+home = os.getenv('HOME')
+sys.path.append(home+'/src/lib/python/')
+from   scexao_shm   import shm
+
+app = QtGui.QApplication([])
+
+## Switch to using white background
+pg.setConfigOption('background', 'w')
+pg.setConfigOption('foreground', 'k')
+# Enable antialiasing for prettier plots
+pg.setConfigOptions(antialias=True)
+
+win = pg.GraphicsWindow(title="Display of LQG Identification")
+win.resize(800,800)
+win.setWindowTitle('Display of LQG Identification')
+
+datashm = shm("/tmp/LQG_identplot.im.shm", verbose=False)
+col = ['k', 'm', 'c', 'r']
+
+p1 = win.addPlot(title="x axis")
+p1.plot()
+p1.setLabel('bottom', 'Frequency', units='Hz')
+p1.setLabel('left', 'PSD', units='<font>&mu;m<sup>2</sup>/Hz</font>')
+p1.setLogMode(x=True, y=True)
+p1.showGrid(x=True, y=True, alpha=0.25)
+curves1 = []
+for i in range(4):
+    c = pg.PlotCurveItem(pen=(col[i]))
+    p1.addItem(c)
+    curves1.append(c)
+
+win.nextRow()
+
+p2 = win.addPlot(title="y axis")
+p2.plot()
+p2.setLabel('bottom', 'Frequency', units='Hz')
+p2.setLabel('left', 'PSD', units='<font>&mu;m<sup>2</sup>/Hz</font>')
+p2.setLogMode(x=True, y=True)
+p2.showGrid(x=True, y=True, alpha=0.25)
+curves2 = []
+for i in range(4):
+    c = pg.PlotCurveItem(pen=(col[i]))
+    p2.addItem(c)
+    curves2.append(c)
+
+ptr = 0
+def update():
+    global ptr
+    data = datashm.get_data(check=False)
+    for i in range(4):
+        curves1[i].setData(np.log10(data[0,1:]), np.log10(data[i+1,1:]))
+        curves2[i].setData(np.log10(data[0,1:]), np.log10(data[i+5,1:]))
+    if ptr == 0:
+        p1.enableAutoRange('xy', False)
+        p2.enableAutoRange('xy', False)
+        ptr = 1
+    time.sleep(1.0)
+        
+timer = QtCore.QTimer()
+timer.timeout.connect(update)
+timer.start(100)
+    
+
+
+## Start Qt event loop unless running in interactive mode.
+if __name__ == '__main__':
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

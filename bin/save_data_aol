@@ -1,0 +1,127 @@
+#!/usr/bin/env python
+
+# ------------------------------------------------------------ #
+#      _       _            __                                 #
+#   __| | __ _| |_ __ _    / _| ___  _ __                      #
+#  / _` |/ _` | __/ _` |  | |_ / _ \| '__|                     #
+# | (_| | (_| | || (_| |  |  _| (_) | |                        #
+#  \__,_|\__,_|\__\__,_|  |_|  \___/|_|                        #
+#                                                              #
+#  _     _            _   _  __ _           _   _              #
+# (_) __| | ___ _ __ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __   #
+# | |/ _` |/ _ \ '_ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \  #
+# | | (_| |  __/ | | | |_| |  _| | (_| (_| | |_| | (_) | | | | #
+# |_|\__,_|\___|_| |_|\__|_|_| |_|\___\__,_|\__|_|\___/|_| |_| #
+#                                                              #
+# ------------------------------------------------------------ #
+
+import os
+import time
+import sys
+import numpy as np
+from numpy.linalg import inv
+import math as m
+from astropy.io import fits as pf
+import datetime as dt
+from datetime import datetime
+
+import copy as cp
+import matplotlib.pyplot as plt
+
+home = os.getenv('HOME')
+sys.path.append(home+'/src/lib/python/')
+import ident_model2 as imo
+from   scexao_shm   import shm
+import vibration as vib
+
+args = sys.argv[1:]
+if len(args) > 4 :
+    aoln = int(args[0])
+    fsamp = float(args[1])
+    npoints = int(args[2])
+    nplots = int(args[3])
+    nplots = min(3,max(1,nplots))
+    modes = map(int, args[4:])
+    modes = np.array(modes)
+    nmodes = len(modes)
+else:
+    print("Wrong number of arguments")
+    sys.exit()
+
+# ------------------------------------------------------------------
+#                       global variables
+# ------------------------------------------------------------------
+lomolshm = shm("/tmp/aol%d_modeval_ol.im.shm" % (aoln,)) #SHM of pseudo-open loop data
+if nplots > 1:
+    lomclshm = shm("/tmp/aol%d_modeval.im.shm" % (aoln,)) # SHM of closed-loop data
+saveshm = shm("/tmp/aol%d_dispdata.im.shm" % (aoln,), verbose = False) # SHM of flag for identification
+
+# ------------------------------------------------------------------
+#               Initialization of variables
+# ------------------------------------------------------------------
+
+flag = saveshm.get_data(False,True).astype(float)[0]
+
+times = np.arange(npoints)/fsamp
+npoints2 = npoints/5
+nshift = int(npoints/10)
+
+
+psd_OL = np.zeros((npoints2//2,nmodes))
+psd_CL = np.zeros((npoints2//2,nmodes))
+
+y_OL = lomolshm.get_data(False, True).astype(float)
+y_OL = y_OL.squeeze()[:nmodes]
+y_n = lomclshm.get_data(False, True).astype(float)
+y_n = y_n.squeeze()[:nmodes]
+datacl = np.zeros((npoints, nmodes), dtype=float)
+dataol = np.zeros((npoints, nmodes), dtype=float)
+
+pathtmp = "/tmp/aol%d_restmpplot.im.shm" % (aoln,)
+restmpplotshm = shm(pathtmp, verbose = False)
+restmpplot = restmpplotshm.get_data()
+if nplots > 1 :
+    pathpsd = "/tmp/aol%d_respsdplot.im.shm" % (aoln,)
+    respsdplotshm = shm(pathpsd, verbose = False)
+    respsdplot = respsdplotshm.get_data()
+
+cnt0 = -1
+j = 0
+
+# ===================================================================
+while flag[0]: 
+        
+    cnt = lomolshm.get_counter()
+    if ((cnt <= cnt0) and flag[0]):
+        cnt = lomolshm.get_counter()
+        flag = saveshm.get_data(False,True).astype(float)[0]
+        time.sleep(0.0002)
+    elif (cnt > cnt0):
+        flag = saveshm.get_data(False,True).astype(float)[0]
+        y_n = lomclshm.get_data(False, True).astype(float)
+        datacl[j,:] = y_n.squeeze()[modes]
+        y_OL = lomolshm.get_data(False, True).astype(float)
+        dataol[j,:] = y_OL.squeeze()[modes]
+        j += 1
+        cnt0 = cnt
+    if j == npoints:
+        restmpplot[0,:] = times
+        restmpplot[1:nmodes+1,:] = dataol.T
+        restmpplot[nmodes+1:,:] = datacl.T
+        for k in range(nmodes):
+            res = vib.psd2d(dataol[:,k], npoints2, nshift, fsamp)
+            psd_OL[:,k] = np.mean(res.psd_2d, axis=0)
+            res = vib.psd2d(datacl[:,k], npoints2, nshift, fsamp)
+            psd_CL[:,k] = np.mean(res.psd_2d, axis=0)
+        freq = res.X[0,:]
+        respsdplot[0,:] = freq
+        respsdplot[1:nmodes+1,:] = psd_OL.T
+        respsdplot[nmodes+1:,:] = psd_CL.T
+        restmpplotshm.set_data0(restmpplot)
+        respsdplotshm.set_data0(respsdplot)
+
+    j %= npoints
+
+
+print("Stopping saving data loop")
+saveshm.set_data0b(np.ones(1))

@@ -1,0 +1,50 @@
+#!/bin/bash
+
+
+tmux kill-session -t dmTCPrcv-$1
+
+tmux new-session -d -s dmTCPrcv-$1
+tmux split-window -v
+tmux split-window -v
+tmux select-layout even-vertical
+tmux split-window -v
+tmux select-layout even-vertical
+tmux split-window -v
+tmux select-layout even-vertical
+tmux split-window -v
+tmux select-layout even-vertical
+
+
+cmd="shmimTCPreceive"
+
+if [ "$1" -eq "0" ]; then
+tmux select-pane -t 0
+tmux send-keys "$cmd 30010" C-m
+tmux select-pane -t 1
+tmux send-keys "$cmd 30011" C-m
+tmux select-pane -t 2
+tmux send-keys "$cmd 30012" C-m
+tmux select-pane -t 3
+tmux send-keys "$cmd 30013" C-m
+tmux select-pane -t 4
+tmux send-keys "$cmd 30014" C-m
+tmux select-pane -t 5
+tmux send-keys "$cmd 30015" C-m
+fi
+
+
+
+if [ "$1" -eq "1" ]; then
+tmux select-pane -t 0
+tmux send-keys "$cmd 30016" C-m
+tmux select-pane -t 1
+tmux send-keys "$cmd 30017" C-m
+tmux select-pane -t 2
+tmux send-keys "$cmd 30018" C-m
+tmux select-pane -t 3
+tmux send-keys "$cmd 30019" C-m
+tmux select-pane -t 4
+tmux send-keys "$cmd 30020" C-m
+tmux select-pane -t 5
+tmux send-keys "$cmd 30021" C-m
+fi

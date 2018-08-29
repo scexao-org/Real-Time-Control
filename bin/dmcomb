@@ -1,0 +1,56 @@
+#!/bin/bash
+
+EXPECTED_ARGS=2
+
+
+if [ ! "$1" = "help" ] && [ $# -ne $EXPECTED_ARGS ]
+then
+  echo "Wrong number of argument"
+  echo "expecting $EXPECTED_ARGS arguments - see instructions below"
+fi
+
+if [ "$1" = "help" ] || [ $# -ne $EXPECTED_ARGS ]
+then
+  echo
+  echo "------ START DM CHANNELS AND COMBINE PROCESS ----"
+  echo
+  echo " runs in tmux session dm<DM number>comb"
+  echo
+  echo "Usage: $0 <DM number> <maxvolt [V]>"
+  echo
+  echo "  INPUT <DM number>     : DM number 00-09"
+  echo "  INPUT <maxvolt [V]>   : maximum voltage to be applied to DM"
+  echo
+  echo "EXAMPLE: $0 00 120.0"
+  echo
+  echo
+  exit
+fi
+
+
+
+VMAX=$2
+S100=0.7 # 100 V stroke
+
+
+cacao -n dm$1comb << EOF
+csetpmove dmcomb
+readshmim dmvolt
+readshmim dm$1disp
+readshmim dm$1disp00
+readshmim dm$1disp01
+readshmim dm$1disp02
+readshmim dm$1disp03
+readshmim dm$1disp04
+readshmim dm$1disp05
+readshmim dm$1disp06
+readshmim dm$1disp07
+readshmim dm$1disp08
+readshmim dm$1disp09
+readshmim dm$1disp10
+readshmim dm$1disp11
+offset=($2/100)*($2/100)*0.5*${S100}
+aolcontrolDMcomb $1 50 50 12 1 0 dmmodes outdisp 0 wfsrm refout 1 dmvolt offset $2
+exitCLI
+EOF
+

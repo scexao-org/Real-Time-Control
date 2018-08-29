@@ -1,0 +1,105 @@
+#!/usr/bin/python
+
+import os
+import sys
+import time
+from pyqtgraph.Qt import QtGui, QtCore
+import numpy as np
+import pyqtgraph as pg
+home = os.getenv('HOME')
+sys.path.append(home+'/src/lib/python/')
+from   scexao_shm   import shm
+
+args = sys.argv[1:]
+nbplots = 3    # zoom for the display of the maps (default is 4)
+if args != []:
+    if isinstance(int(args[0]),int):
+        nbplots = int(args[0])
+        nbplots = min(3,max(1,nbplots))
+
+app = QtGui.QApplication([])
+
+## Switch to using white background
+pg.setConfigOption('background', 'w')
+pg.setConfigOption('foreground', 'k')
+# Enable antialiasing for prettier plots
+pg.setConfigOptions(antialias=True)
+
+win = pg.GraphicsWindow(title="Display of PyWFS residuals")
+win.resize(1200,400*nbplots)
+win.setWindowTitle('Display of PyWFS residuals')
+
+datatmpshm = shm("/tmp/PyWFS_restmpplot.im.shm", verbose=False)
+datapsdshm = shm("/tmp/PyWFS_respsdplot.im.shm", verbose=False)
+col = ['g', 'r']
+titles = ['x axis', 'yaxis']
+
+# DEFINE THE DIFERENT PLOTS
+
+# Temporal plots
+for i in range(2):
+    exec "p%d = win.addPlot(title=titles[i])" % (i,)
+    exec "p%d.plot()" % (i,)
+    exec "p%d.setLabel('bottom', 'Time', units='s')" % (i,)
+    exec "p%d.setLabel('left', 'Residual', units='m')" % (i,)#'<font>&mu;m</font>')
+    exec "p%d.showGrid(x=True, y=True, alpha=0.25)" % (i,)
+    exec "curves%d = []" % (i,)
+    for j in range(2):
+        c = pg.PlotCurveItem(pen=(col[j]))
+        exec "p%d.addItem(c)" % (i,)
+        exec "curves%d.append(c)" % (i,)
+
+# Power Spectral Densities
+if nbplots > 1:
+    win.nextRow()
+    for i in range(2):
+        exec "p%d = win.addPlot(title=titles[i])" % (i+2,)
+        exec "p%d.plot()" % (i+2,)
+        exec "p%d.setLabel('bottom', 'Frequency', units='Hz')" % (i+2,)
+        exec "p%d.setLabel('left', 'PSD', units='<font>&mu;m<sup>2</sup>/Hz</font>')" % (i+2,)
+        exec "p%d.setLogMode(x=True, y=True)" % (i+2,)
+        exec "p%d.showGrid(x=True, y=True, alpha=0.25)" % (i+2,)
+        exec "curves%d = []" % (i+2,)
+        for j in range(2):
+            c = pg.PlotCurveItem(pen=(col[j]))
+            exec "p%d.addItem(c)" % (i+2,)
+            exec "curves%d.append(c)" % (i+2,)
+
+# Power rejection
+if nbplots > 2:
+    win.nextRow()
+    for i in range(2):
+        exec "p%d = win.addPlot(title=titles[i])" % (i+4,)
+        exec "p%d.plot()" % (i+4,)
+        exec "p%d.setLabel('bottom', 'Frequency', units='Hz')" % (i+4,)
+        exec "p%d.setLabel('left', 'Rejection')" % (i+4,)
+        exec "p%d.setLogMode(x=True, y=True)" % (i+4,)
+        exec "p%d.showGrid(x=True, y=True, alpha=0.25)" % (i+4,)
+        exec "curves%d = []" % (i+4,)
+        c = pg.PlotCurveItem(pen='b')
+        exec "p%d.addItem(c)" % (i+4,)
+        exec "curves%d.append(c)" % (i+4,)
+
+# UPDATE OF THE PLOTS
+def update():
+    global ptr
+    datatmp = datatmpshm.get_data(check=False)
+    datapsd = datapsdshm.get_data(check=False)
+    for i in range(2):
+        for j in range(2):
+            exec "curves%d[j].setData(datatmp[0,:], datatmp[2*j+i+1,:]*1e-6)" % (i,)
+            if nbplots>1 :
+                exec "curves%d[j].setData(np.log10(datapsd[0,1:]), np.log10(datapsd[2*j+i+1,1:]))" % (i+2,)
+            if nbplots > 2:
+                exec "curves%d[0].setData(np.log10(datapsd[0,1:]), np.log10(datapsd[i+3,1:]/datapsd[i+1,1:]))" % (i+4,)
+    time.sleep(1.0)
+
+timer = QtCore.QTimer()
+timer.timeout.connect(update)
+timer.start(100)
+
+## Start Qt event loop unless running in interactive mode.
+if __name__ == '__main__':
+    import sys
+    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
+        QtGui.QApplication.instance().exec_()

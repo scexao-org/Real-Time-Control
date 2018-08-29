@@ -1,0 +1,22 @@
+#!/bin/bash
+
+EXPECTED_ARGS=2
+
+if [ ! "$1" = "help" ] && [ $# -ne $EXPECTED_ARGS ]
+then
+  echo "Wrong number of argument"
+  echo "expecting $EXPECTED_ARGS arguments - see instructions below"
+  echo
+  echo "======== copy FITS file to shared memory ====="
+  echo
+  echo "Usage: $0 <FITS file> <shared mem stream name>"
+  echo
+exit
+fi
+
+cacao << EOF
+loadfits "$1" _im
+cpsh _im $2
+exit
+EOF
+

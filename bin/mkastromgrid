@@ -1,0 +1,13 @@
+#!/bin/bash
+
+coeff=0.1
+
+cacao << EOF
+mkslopexy imsx 50 50 $1 0.0
+imsinx=sin(imsx)
+mkslopexy imsy 50 50 0.0 $1
+imsiny=sin(imsy)
+im=imsinx+imsiny
+savefits im "!astromgrid.fits"
+exit
+EOF

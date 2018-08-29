@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "Stopping DM processes ..."
+
+dmzero
+
+# kill all previous dm processes
+tmux kill-session -t dm
+tmux kill-session -t dmTCPrcv
+ssh scexao@scexao2 "/home/scexao/bin/dmTCPsend_kill"
+
+
+
