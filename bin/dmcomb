@@ -50,7 +50,9 @@ readshmim dm$1disp09
 readshmim dm$1disp10
 readshmim dm$1disp11
 offset=($2/100)*($2/100)*0.5*${S100}
-aolcontrolDMcomb $1 50 50 12 1 0 dmmodes outdisp 0 wfsrm refout 1 dmvolt offset $2
+aolcontrolDMcomb $1 50 50 12 1 0 dmmodes outdisp 0 wfsrm refout 1 2 ${S100} dmvolt offset $2
 exitCLI
 EOF
+
+
 
