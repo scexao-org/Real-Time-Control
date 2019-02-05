@@ -28,6 +28,7 @@ echo "     $(tput bold)-h$(tput sgr0)          help"
 echo "     $(tput bold)-k$(tput sgr0)          kill DM processes but do not restart"
 echo "     $(tput bold)-c$(tput sgr0)          kill only DM connections to scexaoCTRL"
 echo "     $(tput bold)-C$(tput sgr0)          restart only DM connections to scexaoCTRL"
+echo "     $(tput bold)-L$(tput sgr0)          (L)ocal only: do not start connections to scexaoCTRL "
 echo ""
 echo ""
 echo "------------------------------------------------------------------------"
@@ -87,9 +88,10 @@ KILLMAIN="1"
 RESTARTMAIN="1"
 KILLCONN="1"
 RESTARTCONN="1"
+LOCAL="0"
 
 #Parse command line flags
-while getopts :hkcC FLAG; do
+while getopts :hkcCL FLAG; do
   case $FLAG in
     h)  #show help
       if [ "$singlelinehelp" -eq "0" ]; then
@@ -116,6 +118,9 @@ while getopts :hkcC FLAG; do
     RESTARTMAIN="0"
     KILLCONN="1"
     RESTARTCONN="1"
+    ;;
+    L)
+    LOCAL="1"
     ;;
     \?) #unrecognized option - show help
       echo -e \\n"Option -${BOLD}$OPTARG${NORM} not allowed."
@@ -177,6 +182,7 @@ fi
 
 
 
+if [ "$LOCAL" = "0" ]; then
 
 if [ "$KILLCONN" = "1" ]; then
 echo "[1] killing scexoCTRL connection"
@@ -189,6 +195,8 @@ sleep 6
 echo "[2] initialize shared mem strucutres ..."
 ssh scexao@scexaoCTRL "LD_LIBRARY_PATH=$LD_LIBRARY_PATH /home/scexao/bin/dmshminit"
 fi
+fi
+
 
 
 if [ "$KILLMAIN" = "1" ]; then
@@ -208,6 +216,7 @@ sleep 1
 fi
 
 
+if [ "$LOCAL" = "0" ]; then
 if [ "$KILLCONN" = "1" ]; then
 echo "[5] kill dmTCPrcv"
 tmux kill-session -t "dmTCPrcv-0"
@@ -222,6 +231,9 @@ sleep 3
 ssh scexao@scexaoCTRL "LD_LIBRARY_PATH=$LD_LIBRARY_PATH /home/scexao/bin/dmTCPsendp"
 sleep 5
 fi
+fi
+
+
 
 if [ "$RESTARTMAIN" = "1" ]; then
 echo "[7] restart dmcomb"
