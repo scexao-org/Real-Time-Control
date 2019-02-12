@@ -70,4 +70,4 @@ disp -= offset
 #disp /= 2.
 disp = disp.astype('float32')
 
-pf.writeto(auxdir+fname, disp, clobber=True)
+pf.writeto(auxdir+fname, disp, overwrite=True)

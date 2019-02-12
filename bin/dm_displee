@@ -19,7 +19,7 @@ import threading
 import mmap
 import struct
 import os
-import Image
+from PIL import Image
 import time
 
 home = os.getenv('HOME')
@@ -96,8 +96,8 @@ cntloop = 0                    # counter
 #                access to shared memory structures
 # ------------------------------------------------------------------
 
-for i in xrange(nch):
-    exec "disp%02d = shm('/tmp/dm00disp%02d.im.shm', verbose=False)" % (i,i)
+for i in range(nch):
+    exec("disp%02d = shm('/tmp/dm00disp%02d.im.shm', verbose=False)" % (i,i))
 
 disp = shm('/tmp/dm00disp.im.shm', verbose=False)
 volt = shm('/tmp/dmvolt.im.shm', verbose=False)
@@ -111,13 +111,16 @@ def get_counter_channel(chn):
     Reads from the already-opened shared memory
     data structure.
     ---------------------------------------- '''
-    if chn < 8:
-        exec "cnt = disp%02d.get_counter()" % (chn,)
-    elif chn == 8:
+    
+    if chn == 12:
         cnt = disp.get_counter()
+    elif chn < 12:
+        d = locals()
+        exec("cnt = disp%02d.get_counter()" % (chn,), globals(), d)
+        cnt = d['cnt']
     else:
         cnt = volt.get_counter()
-    return cnt
+    return(cnt)
 
 # ===
 # ===
@@ -127,10 +130,13 @@ def get_data_channel(chn):
     Return the current channel data content,
     formatted as a 2D numpy array.
     ---------------------------------------- '''
-    if chn < 12:
-        exec "arr = disp%02d.get_data()" % (chn,)
-    elif chn == 12:
+    
+    if chn == 12:
         arr = disp.get_data()
+    elif chn < 12:
+        d = locals()
+        exec("arr = disp%02d.get_data()" % (chn,), globals(), d)
+        arr = d['arr']
     else:
         arr = volt.get_data()
         arr = np.int64(arr*300./16384.)
@@ -165,8 +171,8 @@ def arr2im(arr, vmin=None, vmax=None):
 # ------------------------------------------------------------------
 
 zo = np.zeros((dms, dms))
-for i in xrange(nch):
-    exec "ch%02d = arr2im(zo)" % (i,)
+for i in range(nch):
+    exec("ch%02d = arr2im(zo)" % (i,))
 
 WHITE = (255, 255, 255)
 GREEN = (  0, 255,   0) 
@@ -181,8 +187,8 @@ dstep = zoom*dms
 # ----------------------------
 xx, yy = np.zeros(14), np.zeros(14)
 
-for ii in xrange(4):
-    for jj in xrange(3):
+for ii in range(4):
+    for jj in range(3):
         xx[ii+jj*4] = ii*dstep+ii*lsize
         yy[ii+jj*4] = jj*dstep+jj*lsize
 
@@ -219,16 +225,16 @@ lbls = ["00: offset (flat)",
         "12: Combined",
         "13: Voltage"]
 
-for i in xrange(nch+2):
-    exec "lbl%02d = myfont.render(lbls[%d], True, WHITE, BLACK)" % (i, i)
-    exec "rct%02d = lbl%02d.get_rect()" % (i,i)
-    exec "rct%02d.bottomleft = (xx[%d], dstep+yy[%d])" % (i,i,i)
+for i in range(nch+2):
+    exec("lbl%02d = myfont.render(lbls[%d], True, WHITE, BLACK)" % (i, i))
+    exec("rct%02d = lbl%02d.get_rect()" % (i,i))
+    exec("rct%02d.bottomleft = (xx[%d], dstep+yy[%d])" % (i,i,i))
 
 # ZP state labels
-for i in xrange(8):
-    exec "zplbl%d = myfont.render('OFF', True, WHITE, RED)" % (i,)
-    exec "zprct%d = zplbl%d.get_rect()" % (i,i)
-    exec "zprct%d.topright = (dstep+xx[%d+4], yy[%d+4])" % (i,i,i)
+for i in range(8):
+    exec("zplbl%d = myfont.render('OFF', True, WHITE, RED)" % (i,))
+    exec("zprct%d = zplbl%d.get_rect()" % (i,i))
+    exec("zprct%d.topright = (dstep+xx[%d+4], yy[%d+4])" % (i,i,i))
 
 UD, LR = 0, 0 # up-down and left-right flags (they can be combined)
 
@@ -241,22 +247,22 @@ while True: # the main game loop
     if clr_scale:
         mycmap = cmaps.inferno
 
-    for i in xrange(nch):
+    for i in range(nch):
         test = get_counter_channel(i)
         #print i, test
         if (test != sm_cntr[i] or update_all):
                 sm_cntr[i] = test
-                exec "temp%02d = get_data_channel(%d)" % (i,i)
+                exec("temp%02d = get_data_channel(%d)" % (i,i))
                 if i == chi or init:
-                    exec "minc%02d = np.min(temp%02d)" % (i,i)
-                    exec "maxc%02d = np.max(temp%02d)" % (i,i)
-                    exec "medc%02d = np.mean(temp%02d)" % (i,i)
-                    exec "stdc%02d = np.std(temp%02d)" % (i,i)
-                exec "ch%02d = arr2im(temp%02d)" % (i,i)
-                exec "surf%02d = pygame.surface.Surface((zoom*dms, zoom*dms))" % (i,)
-                exec "pygame.surfarray.blit_array(surf%02d, ch%02d)" % (i,i)
+                    exec("minc%02d = np.min(temp%02d)" % (i,i))
+                    exec("maxc%02d = np.max(temp%02d)" % (i,i))
+                    exec("medc%02d = np.mean(temp%02d)" % (i,i))
+                    exec("stdc%02d = np.std(temp%02d)" % (i,i))
+                exec("ch%02d = arr2im(temp%02d)" % (i,i))
+                exec("surf%02d = pygame.surface.Surface((zoom*dms, zoom*dms))" % (i,))
+                exec("pygame.surfarray.blit_array(surf%02d, ch%02d)" % (i,i))
                 #exec "rct_dm%02d = surf%02d.get_rect()" % (i,i)
-                exec "screen.blit(surf%02d, (%02d, %02d))" % (i, xx[i], yy[i])
+                exec("screen.blit(surf%02d, (%02d, %02d))" % (i, xx[i], yy[i]))
                 
     test = get_counter_channel(12)
     if (test != gb_cntr or update_all):
@@ -293,7 +299,7 @@ while True: # the main game loop
     if init:
         init = False
         
-    for i in xrange(3):
+    for i in range(3):
         Y0 = (i+1)*dstep+i*lsize
         if i < 2:
             XM = 5*dstep+4*lsize
@@ -301,7 +307,7 @@ while True: # the main game loop
         else:
             pygame.draw.line(screen, WHITE, (0, Y0), (XW, Y0), lsize)
             
-    for i in xrange(5):
+    for i in range(5):
         X0 = (i+1)*dstep+i*lsize
         if i < 4:
             pygame.draw.line(screen, WHITE, (X0, 0), (X0, 3*dstep+2*lsize), lsize)
@@ -309,17 +315,17 @@ while True: # the main game loop
             pygame.draw.line(screen, WHITE, (X0, 0), (X0, 2*dstep+lsize), lsize)
             
 
-    for i in xrange(nch+2):
-        exec "screen.blit(lbl%02d, rct%02d)" % (i,i)
+    for i in range(nch+2):
+        exec("screen.blit(lbl%02d, rct%02d)" % (i,i))
     
-    for i in xrange(8):
-        exec "screen.blit(zplbl%d, zprct%d)" % (i,i)
+    for i in range(8):
+        exec("screen.blit(zplbl%d, zprct%d)" % (i,i))
 
     #channel statistics
-    exec "minc = minc%02d" % (chi,)
-    exec "maxc = maxc%02d" % (chi,)
-    exec "medc = medc%02d" % (chi,)
-    exec "stdc = stdc%02d" % (chi,)
+    exec("minc = minc%02d" % (chi,))
+    exec("maxc = maxc%02d" % (chi,))
+    exec("medc = medc%02d" % (chi,))
+    exec("stdc = stdc%02d" % (chi,))
     stat = "     channel #%02d:   min=%.3f,   max=%.3f,   mean=%.3f,   std=%.3f     " % (chi,minc,maxc,medc,stdc)
     lbst = myfont2.render(stat, True, WHITE, BLACK)
     rctst = lbst.get_rect()
@@ -340,7 +346,7 @@ while True: # the main game loop
                         bkcolor = GREEN
             except:
                 pass
-            exec "zplbl%d = myfont.render(zpstate, True, txcolor, bkcolor)" % (i,)
+            exec("zplbl%d = myfont.render(zpstate, True, txcolor, bkcolor)" % (i,))
 
     # =====================================
     for event in pygame.event.get():
@@ -350,8 +356,8 @@ while True: # the main game loop
 
             # close shared memory access
             # --------------------------
-            for i in xrange(nch):
-                exec "disp%02d.close()" % (i,)
+            for i in range(nch):
+                exec("disp%02d.close()" % (i,))
 
             disp.close()
             volt.close()
@@ -364,8 +370,8 @@ while True: # the main game loop
                 pygame.quit()
                 # close shared memory access
                 # --------------------------
-                for i in xrange(nch):
-                    exec "disp%02d.close()" % (i,)
+                for i in range(nch):
+                    exec("disp%02d.close()" % (i,))
 
                 disp.close()
                 volt.close()
@@ -517,8 +523,8 @@ while True: # the main game loop
     cntloop += 1
 
 pygame.quit()
-for i in xrange(nch):
-    exec "disp%02d.close()" % (i,)
+for i in range(nch):
+    exec("disp%02d.close()" % (i,))
 disp.close()
 volt.close()
 sys.exit()

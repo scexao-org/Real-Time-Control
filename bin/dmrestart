@@ -254,7 +254,7 @@ if [ "$RESTARTMAIN" = "1" ]; then
 echo "[9] Start DM optical link interface ..."
 sleep 1
 tmux new-session -d -s dmopttrig
-tmux send-keys -t dmopttrig "cd /home/scexao/src/DMoptical/bin" C-m
+tmux send-keys -t dmopttrig "cd /home/scexao/src/DM_BMC/" C-m
 tmux send-keys -t dmopttrig "sudo insmod bmc_mdrv.ko" C-m
 tmux send-keys -t dmopttrig "sudo -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH} ./runBMCcacao -K" C-m
 sleep 0.5
