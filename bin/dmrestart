@@ -256,7 +256,7 @@ sleep 1
 tmux new-session -d -s dmopttrig
 tmux send-keys -t dmopttrig "cd /home/scexao/src/DM_BMC/" C-m
 tmux send-keys -t dmopttrig "sudo insmod /home/scexao/src/DMoptical/bin/bmc_mdrv.ko" C-m
-tmux send-keys -t dmopttrig "sudo chmod o+rw /dev/bmc_mdrv0"
+tmux send-keys -t dmopttrig "sudo chmod o+rw /dev/bmc_mdrv0" C-m
 tmux send-keys -t dmopttrig "sudo -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH} ./runBMCcacao -K" C-m
 sleep 0.5
 tmux send-keys -t dmopttrig "sudo -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH} ./runBMCcacao -D 0" C-m
