@@ -35,16 +35,18 @@ all_dtypes = [np.uint8,     np.int8,    np.uint16,    np.int16,
 # ------------------------------------------------------
 # list of metadata keys for the shm structure (global)
 # ------------------------------------------------------
-mtkeys = ['imname', 'naxis', 'size', 'nel', 'atype',
-          'crtime', 'latime', 'tvsec', 'tvnsec', 
-          'shared', 'status', 'logflag', 'sem',
-          'cnt0', 'cnt1', 'cnt2',
-          'write', 'nbkw']
+mtkeys = ['version', 'imname', 'naxis', 'size', 'nel', 'atype',
+          'imtype', 'crtime', 'latime', 'atime', 'atimearr',
+          'wtime', 'wtimearr', 'shared', 'loc', 'status',
+          'flag', 'flagarr', 'logflag', 'sem',
+          'cnt0', 'cnt1', 'cnt2', 'cntarr',
+          'write', 'nbkw', 'cudamem']
 
 # ------------------------------------------------------
 #    string used to decode the binary shm structure
 # ------------------------------------------------------
-hdr_fmt = '80s B3x 3I Q B7x d d q q B B B1x H2x Q Q Q B1x H4x'
+#hdr_fmt = '80s B3x 3I Q B7x d d q q B B B1x H2x Q Q Q B1x H4x'
+hdr_fmt = '32s 80s B3x 3I Q B7x Q 2Q 2Q 2Q Q 2Q Q B b B5x Q Q B1x H4x Q Q Q Q B1x H 64s4x'
 
 ''' 
 ---------------------------------------------------------
@@ -90,18 +92,19 @@ class shm:
         data is provided, the file will be created or overwritten.
         -------------------------------------------------------------- '''
         self.hdr_fmt   = hdr_fmt  # in case the user is interested
-        self.c0_offset = 152      # fast-offset for counter #0
+        self.c0_offset = 264      # fast-offset for counter #0
 
         # --------------------------------------------------------------------
         #                dictionary containing the metadata
         # --------------------------------------------------------------------
-        self.mtdata = {'imname': '',
-                       'naxis' : 0,   'size'  : (0,0,0), 'nel': 0, 'atype': 0,
-                       'crtime': 0.0, 'latime': 0.0, 
-                       'tvsec' : 0.0, 'tvnsec': 0.0,
-                       'shared': 0,   'status': 0, 'logflag': 0, 'sem': 0,
-                       'cnt0'  : 0,   'cnt1'  : 0, 'cnt2': 0,
-                       'write' : 0,   'nbkw'  : 0}
+        self.mtdata = {'version': '', 'imname': '', 'naxis': 0,
+                       'size': (0,0,0), 'nel': 0, 'atype': 0, 'imtype': 0,
+                       'crtime': (0,0), 'latime': (0,0), 'atime': (0,0),
+                       'atimearr': 0, 'wtime': (0,0), 'wtimearr': 0,
+                       'shared': 0, 'loc': 0, 'status': 0, 'flag': 0,
+                       'flagarr': 0, 'logflag': 0, 'sem': 0,
+                       'cnt0': 0, 'cnt1': 0, 'cnt2': 0, 'write': 0, 'nbkw': 0,
+                       'cudamem': ''}
 
         # --------------------------------------------------------------------
         #          dictionary describing the content of a keyword
@@ -171,7 +174,7 @@ class shm:
         fmts = self.hdr_fmt.split(' ')
         minibuf = ''
         for i, fmt in enumerate(fmts):
-            if i != 2:
+            if i not in (3,7,8,9,11):
                 minibuf += struct.pack(fmt, self.mtdata[mtkeys[i]])
             else:
                 tpl = self.mtdata[mtkeys[i]]
@@ -209,7 +212,7 @@ class shm:
         -------------------------------------------------------------- '''
         
         self.mtdata['imname'] = newname.ljust(80, ' ')
-        self.buf[0:80]        = struct.pack('80s', self.mtdata['imname'])
+        self.buf[32:112]        = struct.pack('80s', self.mtdata['imname'])
 
     def close(self,):
         ''' --------------------------------------------------------------
@@ -236,7 +239,7 @@ class shm:
         for i, fmt in enumerate(fmts):
             hlen = struct.calcsize(fmt)
             mdata_bit = struct.unpack(fmt, self.buf[offset:offset+hlen])
-            if i != 2:
+            if i not in (3,7,8,9,11):
                 self.mtdata[mtkeys[i]] = mdata_bit[0]
             else:
                 self.mtdata[mtkeys[i]] = mdata_bit
@@ -371,7 +374,7 @@ class shm:
                    timen = time.time()
                    
         data = np.fromstring(self.buf[i0:i1],dtype=self.npdtype) # read img
-
+        
         if reform:
             data = np.reshape(data, self.mtdata['size'][:2][::-1])
         return(data)

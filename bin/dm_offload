@@ -17,7 +17,7 @@ import numpy as np
 import math as m
 import copy
 
-home = os.getenv('HOME')
+home = os.getenv("HOME")
 sys.path.append(home+'/src/lib/python/')
 from scexao_shm import shm
 
@@ -84,18 +84,18 @@ try:
             loop_on = False
         asx0 = asx
         asy0 = asy
-        print [asx, asy, loop_on]
+        print([asx, asy, loop_on])
         #time.sleep(1)
         # if the psf is still north-west of the hotspot, move south-east
         if abs(asx) > threshold:
             x_m = int(m.copysign(10, asx))
-            print x_m
+            print(x_m)
             os.system("ssh scexao@scexao2 \"/home/scexao/bin/devices/dm_stage y push %+i\"" %x_m)
             time.sleep(0.1)
             #os.system("ssh scexao@scexao2 \"/home/scexao/bin/log DM offload: offloading y %+i\"" %x_m)
         if abs(asy) > threshold:
             y_m = int(m.copysign(10, asy))
-            print y_m
+            print(y_m)
             os.system("ssh scexao@scexao2 \"/home/scexao/bin/devices/dm_stage x push %+i\"" %y_m)
             time.sleep(0.1)
             #os.system("ssh scexao@scexao2 \"/home/scexao/bin/log DM offload: offloading x %+i\"" %y_m)

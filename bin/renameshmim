@@ -1,0 +1,9 @@
+#!/bin/bash
+
+for name in shmim_*
+do
+  newname=shmim."$(echo "$name" | cut -c7-)"
+  printf "%-32s %-32s\n" "$name" "$newname"
+  mv "$name" "$newname"
+done
+

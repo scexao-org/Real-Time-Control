@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Fast rsync alternative for local transfers
+
+src="$1"
+dest="$2"
+
+mkdir -p $2
+
+#filelist=( $(rsync --dry-run -au --progress $src $dest) )
+mapfile -t filearray < <( rsync --dry-run -au --progress $src $dest )
+
+filearray[0]=""
+
+for fname in "${filearray[@]}"
+do
+if [[ ! -z "$fname" ]]; then
+  if [ "${fname: -1}" = "/" ]; then
+  echo "Create directory  $fname"
+  mkdir -p $dest/$fname
+  else
+  echo "Copy file         $fname"
+  cp -p $fname $dest/$fname
+  fi
+fi
+done
+
+rsync -au --progress $src $dest
+
+
+
+
