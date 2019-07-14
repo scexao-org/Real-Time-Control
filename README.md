@@ -3,7 +3,17 @@
 
 Real-time control (RTC) software, deployed on computer scexaoRTC
 
-## Setup
+## Deployment
+
+To deploy:
+
+- clone this repo to RTC computer
+
+- run script
+
+    $ ./scexaoRTCinstall
+    
+
 
 bin directory contains scripts, should be symlinked to '~/bin'
 
