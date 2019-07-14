@@ -7,10 +7,7 @@ Real-time control (RTC) software, deployed on computer scexaoRTC
 
 To deploy:
 
-- clone this repo to RTC computer
-
-- run script
-
+    $ git clone <this repo>
     $ ./scexaoRTCinstall
     
 
