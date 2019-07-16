@@ -7,8 +7,7 @@ dest="$2"
 
 mkdir -p $2
 
-#filelist=( $(rsync --dry-run -au --progress $src $dest) )
-mapfile -t filearray < <( rsync --dry-run -au --progress $src $dest )
+mapfile -t filearray < <( rsync --dry-run -au --progress --include='*.fits' --include='*.txt' --include='*.dat' --include='*/' --exclude='*' $src $dest )
 
 filearray[0]=""
 
@@ -25,7 +24,7 @@ if [[ ! -z "$fname" ]]; then
 fi
 done
 
-rsync -au --progress $src $dest
+rsync -au --progress --remove-source-files --include='*.fits' --include='*.txt' --include='*.dat' --include='*/' --exclude='*' $src $dest
 
 
 

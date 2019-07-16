@@ -1,0 +1,118 @@
+#!/bin/bash
+
+
+
+
+
+# adapted from https://www.osadl.org/uploads/media/mklatencyplot.bash
+
+
+INDEX=$1
+STRESS=$2
+
+NBcores=$(nproc)
+
+
+LOOPS=3000000
+MLOCK=1
+INTV=200 # interval [us]
+PRIO=90
+
+
+# Write configuration file to document settings
+uname -a > rttest.conf
+echo "$NBcores cores"  >> rttest.conf
+echo "LOOPS = ${LOOPS}" >> rttest.conf
+echo "MLOCK = ${MLOCK}" >> rttest.conf
+echo "INTV  = ${INTV}" >> rttest.conf
+echo "PRIO  = ${PRIO}" >> rttest.conf
+
+
+if [ ${STRESS} = "1" ]; then
+echo "STRESS TEST"
+sudo stress-ng --cpu 0 --io 0 --vm 0 --vm-bytes 100G --timeout 610s &
+sleep 5
+else
+echo "IDLE TEST"
+fi
+
+
+
+
+echo "Running cyclictest for 10 mn [ctrl-C to stop prematurely] ..."
+date
+
+sudo cyclictest --loops=${LOOPS} -m -S --priority=${PRIO} --interval=${INTV} -h10000 -q > tmp_output.dat 
+
+date
+echo ""
+echo "Done"
+
+
+# Get maximum latency
+maxlatency=`grep "Max Latencies" tmp_output.dat | tr " " "\n" | sort -n | tail -1 | sed s/^0*//`
+echo "Max latency = $maxlatency"
+
+
+
+# Grep data lines, remove empty lines and create a common field separator
+grep -v -e "^#" -e "^$" tmp_output.dat | tr " " "\t" > tmp_histogram.dat
+rm tmp_output.dat
+
+
+# Create two-column data sets with latency classes and frequency values for each core, for example
+for i in `seq 1 $NBcores`
+do
+  column=`expr $i + 1`
+  cut -f1,$column tmp_histogram.dat > tmp_histogram$i.dat
+done
+
+rm tmp_histogram.dat
+
+
+# 6. Create plot command header
+echo -n -e "set title \"Latency plot\"\n\
+set terminal png\n\
+set terminal png size 1024,768\n\
+set xlabel \"Latency (us), max $maxlatency us\"\n\
+set logscale xy\n\
+set xrange [1:1400]\n\
+set yrange [0.8:*]\n\
+set ylabel \"Number of latency samples\"\n\
+set output \"plot.png\"\n\
+plot " > tmp_plotcmd.gnuplot
+
+
+
+# 7. Append plot command data references
+for i in `seq 1 $NBcores`
+do
+  if test $i != 1
+  then
+    echo -n ", " >> tmp_plotcmd.gnuplot
+  fi
+  cpuno=`expr $i - 1`
+  if test $cpuno -lt 10
+  then
+    title=" CPU$cpuno"
+   else
+    title="CPU$cpuno"
+  fi
+  echo -n "\"tmp_histogram$i.dat\" using 1:2 title \"$title\" with histeps lw 3 " >> tmp_plotcmd.gnuplot
+done
+
+# 8. Execute plot command
+gnuplot -persist < tmp_plotcmd.gnuplot
+rm tmp_plotcmd.gnuplot
+
+for i in `seq 1 $NBcores`
+do
+rm tmp_histogram$i.dat
+done
+
+sudo pkill stress-ng
+
+cp plot.png latencyplot.$1.$2.png
+cp rttest.conf latencyconf.$1.$2.txt
+
+

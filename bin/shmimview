@@ -10,7 +10,6 @@ from PIL import Image
 
 home = os.getenv('HOME')
 sys.path.append(home+'/src/lib/python/')
-import colormaps as cmaps
 from   scexao_shm   import shm
 
 
@@ -62,10 +61,10 @@ else:
 #                       global variables
 # ------------------------------------------------------------------
 mycmap = cm.gray
-if cam.naxis == 1:
-    (xsize, ysize) = (cam.size[:cam.naxis], 1)
+if cam.mtdata['naxis'] == 1:
+    (xsize, ysize) = (cam.mtdata['size'][:cam.mtdata['naxis']], 1)
 else:
-    (xsize, ysize) = cam.size[:cam.naxis]
+    (xsize, ysize) = cam.mtdata['size'][:cam.mtdata['naxis']]
 
 # -----------------------
 #   set up the window
@@ -169,7 +168,7 @@ while True: # the main game loop
 
     mycmap = cm.gray
     if clr_scale:
-        mycmap = cmaps.inferno
+        mycmap = cm.inferno
 
     # read image
     temp      = get_img_data()

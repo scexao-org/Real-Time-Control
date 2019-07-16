@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # ------------------------------------------------ #
 #     ___             _ _           _              #
@@ -21,12 +21,7 @@ import struct
 import os
 from PIL import Image
 import time
-
-home = os.getenv('HOME')
-sys.path.append(home+'/src/lib/python/')
-import colormaps as cmaps
-from scexao_shm import shm
-#from xaosim.scexao_shmlib import shm
+from xaosim.scexao_shmlib import shm
 
 
 hmsg = """
@@ -245,7 +240,7 @@ while True: # the main game loop
 
     mycmap = cm.jet
     if clr_scale:
-        mycmap = cmaps.inferno
+        mycmap = cm.inferno
 
     for i in range(nch):
         test = get_counter_channel(i)
