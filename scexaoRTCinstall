@@ -21,6 +21,10 @@ mkdir -p scexaoRTCbin
 mkdir -p scexaoRTCsoft
 
 
+# add entries to .bashrc
+cp ${RTCDIR}/scexaoRTCconf ${HOME}/.bashrc_scexaoRTC
+
+
 
 cd scexaoRTCbin
 
