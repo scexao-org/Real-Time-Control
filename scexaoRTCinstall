@@ -16,6 +16,14 @@ sudo apt install wmctrl
 
 
 
+# Misc convenience
+
+sudo apt install geany
+
+
+
+
+
 cd ${HOME}
 mkdir -p scexaoRTCbin
 mkdir -p scexaoRTCsoft
@@ -32,7 +40,7 @@ cd scexaoRTCbin
 gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatency/setlatency.c
 
 
-
+exit
 
 # CACAO 
 
