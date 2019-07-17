@@ -1,0 +1,85 @@
+
+
+Boston Micromachines Corporation linux driver for PCIeCL mirror driver hardware
+
+    Mar 17, 2015    CIW/SJT
+
+    © Copyright 2015, Boston Micromachines Corporation. All rights reserved.
+
+    Contact:        support@bostonmicromachines.com
+
+===========================================================================
+
+The bmc_linux_sdk_N.N.tbz2 file expands to
+    doc/
+        BMC_HVAIF_MANUAL_RevMM.pdf      hardware manual
+    README                              this file
+    src/
+        inc/
+            bmc_mdlib.h                 API for SDK
+            bmc_mdrv.h                  driver API; only used by SDK
+        drv/
+            bmc_mdrv.c                  source for linux driver
+            Makefile                    build rules for driver
+        lib/
+            bmc_mdlib.c                 source for SDK library
+            Makefile                    build rules for library
+        Makefile                        master build rules for entire SDK
+        tool/
+            bmc_ltest.c                 source for SDK test tool
+            Makefile                    build rules for test tool
+    test
+        sdk_test                        SDK test script (uses bmc_ltest tool)
+
+---------------------------------------------------------------------------
+
+To build the driver, the library, and the test tool:
+    cd src
+    make
+After this step there will be three new directories:
+    tmp/
+        bmc_mdlib.o
+        bmc_ltest.o
+    bin/
+        bmc_mdrv.ko                     driver kernel module for running kernel
+        bmc_ltest                       SDK test tool
+    lib/
+        libbmcmd.a                      BMC mirror driver SDK library
+
+---------------------------------------------------------------------------
+
+To install the driver module in the kernel:
+    cd bin
+    sudo insmod bmc_mdrv.ko
+
+NOTE!   The /dev/bmc_mdrvN file has limited permissions!
+        You must
+            sudo chmod o+rw /dev/bmc_mdrv*
+        in order to access the hardware w/o root privileges.
+
+---------------------------------------------------------------------------
+
+To exercise the hardware, driver, and SDK:
+    cd test
+    ./sdk_test
+
+---------------------------------------------------------------------------
+
+The bmc_ltest.c test tool exercises all the SDK API calls and illustrates
+the proper call sequence for operating the mirror driver board.
+
+The tool/Makefile shows the necessary library invocation for linking the
+SDK into any user-specific software.
+
+===========================================================================
+
+NOTE:
+For larger mirror modules the PC may deliver data faster than the hardware
+can write to the D/A units.  Inside the driver there is a spin delay capability
+which will slow the data transfer.  The bmc_ltest tool can be used to set this
+driver spin delay using, e.g.,
+  bmc_ltest -D N
+where N is the desired spin cycles between PCI write cycles.  The default N is
+0.
+
+===========================================================================

@@ -1,0 +1,117 @@
+#!/bin/bash
+#
+#	Exercise the SDK API using the bmc_ltest tool
+#
+#	Mar 17,		2015		CIW/SJT
+#
+#	© Copyright 2015, Boston Micromachines Corporation. All rights reserved.
+#
+###
+#
+echo "----------test starts at `date` ---------------------------------"
+#
+#	Specify which /dev/bmc_mdrvN device
+#
+ndx=0
+#
+#	Specify HVA type used in these tests
+#
+hva=0		# HVA32
+#
+#	Specify location of tool
+#
+ltest=../bin/bmc_ltest
+#
+###
+#
+${ltest} -l "---T- show help ----" -h
+
+${ltest} -l "---T- show base info ----" -i
+
+${ltest} -l "---T- add custom type and show modes ----" \
+	-b ${ndx}									\
+	-F											\
+	-I 28										\
+	-l "   do (normal)           " -O 28 0 -A	\
+	-l "   do (flipX)            " -O 28 1 -A	\
+	-l "   do (flipY)            " -O 28 2 -A	\
+	-l "   do (flipXY)           " -O 28 3 -A	\
+	-l "   do (transpose)        " -O 28 4 -A	\
+	-l "   do (transposeFilpX)   " -O 28 5 -A	\
+	-l "   do (transposeFilpY)   " -O 28 6 -A	\
+	-l "   do (transposeFlipXY)  " -O 28 7 -A
+
+${ltest} -l "---T- test clone HVA ----" \
+	-b ${ndx}										\
+	-I ${hva} -c 28 "clone           " -I 28 -A	
+
+${ltest} -l "---T- test register i/o ----" \
+	-b ${ndx}								\
+	-d										\
+	-r 13									\
+	-R 13 1234567890						\
+	-r 13									\
+	-R 13 987654321							\
+	-r 13
+
+${ltest} -l "---T- time loop test ----" \
+	-b ${ndx}								\
+	-d										\
+	\
+	-I ${hva}								\
+	-D 0									\
+	-t 10000								\
+	-D 1000									\
+	-t 10000
+
+${ltest} -l "---T- sequence test ----" \
+	-b ${ndx}								\
+	-d										\
+	\
+	-I ${hva}								\
+	-j 0.0									\
+	-S 10.0									\
+	-u 10000000								\
+	-s
+
+${ltest} -l "---T- dither test ----" \
+	-b ${ndx}								\
+	-d										\
+	\
+	-I ${hva}								\
+	-J c									\
+	-W 10.0									\
+	-u 10000000								\
+	-w										\
+
+${ltest} -l "---T- TTL pulse test ----" \
+	-b ${ndx}								\
+	-d										\
+	\
+	-l "   (start a 10Hz seq test)  "		\
+	-I ${hva}								\
+	-j 0.0									\
+	-S 10.0									\
+	\
+	-l  "   (anyCmd)         "				\
+	-T 0 1 0 100.0							\
+	-u 1000000								\
+	-l  "   (specificAct)    "				\
+	-T 1 1 0 100.0							\
+	-u 1000000								\
+	-l  "   (specificCmd)    "				\
+	-T 2 1 0 100.0							\
+	-u 1000000								\
+	-l  "   (specificActCmd) "				\
+	-T 3 1 0 100.0							\
+	-u 1000000								\
+	-l  "   (FVAL)           "				\
+	-T 4 1 0 100.0							\
+	-u 1000000								\
+	-l  "   (internal_err)   "				\
+	-T 5 1 0 100.0							\
+	-u 1000000								\
+	-s
+
+echo "----------test ends at `date` ---------------------------------"
+
