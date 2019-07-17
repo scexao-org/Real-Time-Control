@@ -1,0 +1,14 @@
+#!/bin/bash
+
+TelemetryDirectory="$1"
+StreamName1=$2
+StreamName2=$3
+StartTime=$4
+EndTime=$5
+dT=$6
+lagT=$7
+
+cacao << EOF
+aolptmksyncs2 "${TelemetyDirectory}" ${StreamName1} ${StreamName2} ${StartTime} ${EndTime} ${dT} ${lagT}
+exitCLI
+EOF
