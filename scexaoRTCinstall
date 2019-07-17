@@ -28,11 +28,11 @@ source ~/.profile
 
 cd scexaoRTCbin
 
-# setlatency
+# compile and install setlatency executable
 gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatency/setlatency.c
 
 
-exit
+
 
 # CACAO 
 
