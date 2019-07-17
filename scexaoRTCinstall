@@ -22,7 +22,7 @@ mkdir -p scexaoRTCsoft
 
 
 # add entries to .bashrc
-cp ${RTCDIR}/scexaoRTCconf/bashrc ${HOME}/.bashrc_scexaoRTC
+cp ${RTCDIR}/scexaoRTCconf/profile ${HOME}/.profile_scexaoRTC
 
 
 
