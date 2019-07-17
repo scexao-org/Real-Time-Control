@@ -1,3 +1,43 @@
 #!/bin/bash
 
 
+# REMOTE ACCESS
+
+# x2go
+
+sudo apt install x2goserver
+sudo apt install --no-install-recommends lxde
+sudo apt install terminator
+
+# To increase number of desktops etc...
+sudo apt install wmctrl
+
+
+
+
+exit
+
+# CACAO 
+
+
+sudo apt-get install cmake libreadline-dev libncurses5-dev libfftw3-dev libgsl-dev flex bison
+mkdir src
+cd src
+git clone --recursive https://github.com/cacao-org/cacao cacao
+cd cacao
+git submodule foreach "(git checkout dev; git pull)"
+git checkout dev; git pull
+mkdir _build
+cd _build
+cmake ..
+sudo make install
+sudo ln -s /usr/local/bin/cacao /usr/local/bin/milk
+
+# post installation
+
+echo "/usr/local/lib" > usrlocal.conf
+sudo mv usrlocal.conf /etc/ld.so.conf.d/
+sudo ldconfig -v
+
+
+

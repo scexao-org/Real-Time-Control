@@ -7,13 +7,10 @@ Real-time control (RTC) software, deployed on computer scexaoRTC
 
 To deploy:
 
+    cd ~
     git clone https://github.com/scexao-org/Real-Time-Control
-    ./scexaoRTCinstall
+    ln -s Real-Time-Control/bin /home/scexao/bin
     
+Add to .bashrc:
 
-
-bin directory contains scripts, should be symlinked to '~/bin'
-
-Add '~/bin' to PATH
-
-
+    export PATH=$PATH:/usr/local/bin:/home/scexao/bin
