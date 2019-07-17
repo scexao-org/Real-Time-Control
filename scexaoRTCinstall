@@ -3,7 +3,9 @@
 RTCDIR="${HOME}/Real-Time-Control"
 
 
-# REMOTE ACCESS
+# ==============================================================
+# REMOTE ACCESS, misc tools
+# ==============================================================
 
 # x2go
 
@@ -16,9 +18,14 @@ sudo apt install -y wmctrl
 
 
 
-# Misc convenience
+# Misc convenience and tools
 
 sudo apt install -y geany
+sudo apt install -y gparted
+
+
+
+
 
 
 
@@ -26,6 +33,10 @@ sudo apt install -y geany
 
 cd ${HOME}
 mkdir -p scexaoRTCbin
+# populate scexaoRTCbin
+cp ${RTCDIR}/scexaoRTCbin/* ${HOME}/scexaoRTCbin/
+
+
 mkdir -p scexaoRTCsoft
 
 
@@ -44,7 +55,10 @@ gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatency/setlatency.c
 
 
 
+
+# ==============================================================
 # CACAO 
+# ==============================================================
 
 cd ${HOME}
 sudo apt-get install -y cmake flex bison pkg-config
@@ -72,4 +86,54 @@ sudo ldconfig -v
 echo "tmpfs /milk/shm tmpfs rw,nosuid,nodev" | sudo tee -a /etc/fstab
 sudo mkdir -p /milk/shm
 sudo mount /milk/shm
+
+
+
+
+# ==============================================================
+# DM driver
+# ==============================================================
+
+
+
+cd $HOME
+mkdir -p src/DMoptical
+cd src/DMoptical
+rsync -au --progress /home/scexao/Real-Time-Control/scexaoRTCprogs/DMoptical/* .
+
+# content was uncompressed by:
+# tar -jxvf bmc_linux_sdk_2.2.tbz2
+# Note: List of changes made to source code:
+
+# In drv/bmc_mdrv.c
+#- #include <asm/uaccess.h>
+#+ #include <linux/uaccess.h>
+
+#In drv/bmc_mdrv.c
+#- #include <sys/ioctl.h>
+#+ #include <linux/ioctl.h>
+
+#In drv/bmc_mdrv.c
+#+ #include <linux/uaccess.h>
+
+#In lib/bmc_mdlib.c
+#- #include <linux/ioctl.h>
+#+ #include <sys/ioctl.h>
+
+#In tool/bmc_ltest.c
++ #include <sys/time.h>
+
+
+
+#Compile and install:
+
+mkdir -p tmp
+mkdir -p lib
+cd src
+make
+cd ../bin
+sudo insmod bmc_mdrv.ko
+sudo chmod o+rw /dev/bmc_mdrv*
+
+
 
