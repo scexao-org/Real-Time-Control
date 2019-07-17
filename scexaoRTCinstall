@@ -34,6 +34,8 @@ cp ${RTCDIR}/scexaoRTCconf/profile ${HOME}/.profile_scexaoRTC
 source ~/.profile
 
 
+exit
+
 cd scexaoRTCbin
 
 # compile and install setlatency executable
