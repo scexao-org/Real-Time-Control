@@ -1,5 +1,7 @@
 #!/bin/bash
 
+RTCDIR="${HOME}/Real-Time-Control"
+
 
 # REMOTE ACCESS
 
@@ -13,6 +15,17 @@ sudo apt install terminator
 sudo apt install wmctrl
 
 
+
+cd ${HOME}
+mkdir -p scexaoRTCbin
+mkdir -p scexaoRTCsoft
+
+
+
+cd scexaoRTCbin
+
+# setlatency
+gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatencysetlatency.c
 
 
 exit
