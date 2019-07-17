@@ -25,7 +25,7 @@ mkdir -p scexaoRTCsoft
 cd scexaoRTCbin
 
 # setlatency
-gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatencysetlatency.c
+gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatency/setlatency.c
 
 
 exit
