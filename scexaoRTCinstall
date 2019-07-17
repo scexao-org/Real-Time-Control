@@ -40,13 +40,15 @@ cd scexaoRTCbin
 gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatency/setlatency.c
 
 
-exit
+
 
 # CACAO 
 
+cd ${HOME}
+sudo apt-get install -y cmake flex bison pkg-config
+sudo apt-get install -y libcfitsio7 libcfitsio-dev libreadline-dev libfftw3-dev libgsl-dev libncurses5-dev 
 
-sudo apt-get install cmake libreadline-dev libncurses5-dev libfftw3-dev libgsl-dev flex bison
-mkdir src
+mkdir -p src
 cd src
 git clone --recursive https://github.com/cacao-org/cacao cacao
 cd cacao
@@ -65,4 +67,7 @@ sudo mv usrlocal.conf /etc/ld.so.conf.d/
 sudo ldconfig -v
 
 
+echo "tmpfs /milk/shm tmpfs rw,nosuid,nodev" | sudo tee -a /etc/fstab
+sudo mkdir -p /milk/shm
+sudo mount /milk/shm
 

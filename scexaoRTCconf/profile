@@ -1,4 +1,6 @@
 
+export MILK_SHM_DIR=/milk/shm
+
 export PATH=$PATH:/usr/local/bin:/home/scexao/bin
 export PATH=$PATH:/home/scexao/scexaoRTCbin
 
