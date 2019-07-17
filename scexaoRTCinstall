@@ -7,18 +7,18 @@ RTCDIR="${HOME}/Real-Time-Control"
 
 # x2go
 
-sudo apt install x2goserver
-sudo apt install --no-install-recommends lxde
-sudo apt install terminator
+sudo apt install -y x2goserver
+sudo apt install -y --no-install-recommends lxde
+sudo apt install -y terminator
 
 # To increase number of desktops etc...
-sudo apt install wmctrl
+sudo apt install -y wmctrl
 
 
 
 # Misc convenience
 
-sudo apt install geany
+sudo apt install -y geany
 
 
 
