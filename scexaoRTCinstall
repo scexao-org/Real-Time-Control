@@ -3,46 +3,27 @@
 RTCDIR="${HOME}/Real-Time-Control"
 
 
+
+
+
 # ==============================================================
-# REMOTE ACCESS, misc tools
+# Deploy RTC scripts
 # ==============================================================
-
-# x2go
-
-sudo apt install -y x2goserver
-sudo apt install -y --no-install-recommends lxde
-sudo apt install -y terminator
-
-# To increase number of desktops etc...
-sudo apt install -y wmctrl
-
-
-
-# Misc convenience and tools
-
-sudo apt install -y geany
-sudo apt install -y gparted
-
-
-
-
-
-
-
-
 
 cd ${HOME}
 mkdir -p scexaoRTCbin
 # populate scexaoRTCbin
 cp ${RTCDIR}/scexaoRTCbin/* ${HOME}/scexaoRTCbin/
 
+cd ${HOME}
+mkdir -p scexaoRTCconf
+# populate scexaoRTCconf
+cp ${RTCDIR}/scexaoRTCconf/* ${HOME}/scexaoRTCconf/
+cd ${HOME}/scexaoRTCconf
+./confinstall
+source ~/.profile
 
 mkdir -p scexaoRTCsoft
-
-
-# add entries to .profile
-cp ${RTCDIR}/scexaoRTCconf/profile ${HOME}/.profile_scexaoRTC
-source ~/.profile
 
 
 
@@ -51,6 +32,30 @@ cd scexaoRTCbin
 
 # compile and install setlatency executable
 gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatency/setlatency.c
+
+
+
+
+
+# ==============================================================
+# REMOTE ACCESS, misc tools
+# ==============================================================
+
+# x2go
+sudo apt install -y x2goserver
+sudo apt install -y --no-install-recommends lxde
+sudo apt install -y terminator
+
+# To increase number of desktops etc...
+sudo apt install -y wmctrl
+
+
+# Misc convenience and tools
+sudo apt install -y geany
+sudo apt install -y gparted
+sudo apt install -y iotop
+sudo apt install -y numactl
+
 
 
 

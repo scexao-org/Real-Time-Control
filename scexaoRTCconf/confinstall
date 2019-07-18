@@ -1,11 +1,21 @@
 #!/bin/bash
 
-ln -s ${PWD}/tmux.conf ${HOME}/.tmux.conf
+cp ${PWD}/tmux.conf ${HOME}/.tmux.conf
 
 
+# add entries to .profile
+cp ${PWD}/profile ${HOME}/.profile_scexaoRTC
+
+
+
+
+# encrypt:
 # gpg --batch --passphrase XXXX -c file.txt
+
+# decrypt:
 # gpg --batch --passphrase XXXX file.txt.gpg
 
 read -s -p "Enter GPG passphrase: " PASS
 
-gpg --batch --passphrase $PASS 
+gpg --batch --passphrase $PASS 50-cloud-init.yaml.gpg
+
