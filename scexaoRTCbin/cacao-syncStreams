@@ -9,6 +9,11 @@ dT=$6
 lagT=$7
 
 cacao << EOF
-aolptmksyncs2 "${TelemetyDirectory}" ${StreamName1} ${StreamName2} ${StartTime} ${EndTime} ${dT} ${lagT}
+aolptmksyncs2 "${TelemetryDirectory}" ${StreamName1} ${StreamName2} ${StartTime} ${EndTime} ${dT} ${lagT}
+savefits outC0 "!${StreamName1}.fits"
+savefits outC1 "!${StreamName2}.fits"
+listim
 exitCLI
 EOF
+mv exptime.dat exptime.${StreamName1}.${StreamName2}.dat
+
