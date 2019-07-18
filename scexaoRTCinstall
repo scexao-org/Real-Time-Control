@@ -47,6 +47,23 @@ gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatency/setlatency.c
 sudo cp ${HOME}/scexaoRTCconf/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
 sudo netplan apply
 
+# to check hardware interfaces:
+# sudo lshw -class network -businfo
+
+# Bus info          Device     Class          Description
+# =======================================================
+# pci@0000:01:00.0  enp1s0f0   network        Ethernet Controller 10G X550T
+# pci@0000:01:00.1  enp1s0f1   network        Ethernet Controller 10G X550T
+# pci@0000:1b:00.0  enp27s0f0  network        82599ES 10-Gigabit SFI/SFP+ Network Connection
+# pci@0000:1b:00.1  enp27s0f1  network        82599ES 10-Gigabit SFI/SFP+ Network Connection
+# pci@0000:86:00.0  ens4f0     network        MT27700 Family [ConnectX-4]
+# pci@0000:86:00.1  ens4f1     network        MT27700 Family [ConnectX-4]
+# pci@0000:db:00.0             network        MT27800 Family [ConnectX-5]
+# pci@0000:db:00.1             network        MT27800 Family [ConnectX-5]
+
+
+
+
 
 
 # ==============================================================
@@ -64,7 +81,13 @@ sudo mkdir md0
 sudo chown scexao md0/
 sudo chgrp scexao md0/
 
+cd ${HOME}/scexaoRTCconf/
+cat /etc/fstab fstabadd > fstab.new
+cp /etc/fstab fstab.old
+sudo cp fstab.new /etc/fstab
 
+sudo mount /mnt/md0
+sudo mount /mnt/sdata00
 
 
 
