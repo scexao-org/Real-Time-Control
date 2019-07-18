@@ -111,7 +111,7 @@ sudo apt install -y gparted
 sudo apt install -y iotop
 sudo apt install -y numactl
 
-
+sudo apt install -y saods9 
 
 
 
