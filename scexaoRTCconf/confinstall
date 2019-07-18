@@ -18,4 +18,5 @@ cp ${PWD}/profile ${HOME}/.profile_scexaoRTC
 read -s -p "Enter GPG passphrase: " PASS
 
 gpg --batch --passphrase $PASS 50-cloud-init.yaml.gpg
+gpg --batch --passphrase $PASS fstabadd.gpg
 

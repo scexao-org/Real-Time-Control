@@ -1,0 +1,4 @@
+/dev/disk/by-uuid/45e67a89-1bdf-405f-aaa0-ae102a650517 /mnt/oldRTCmain auto nosuid,nodev,nofail,x-gvfs-show 0 0
+/dev/disk/by-uuid/6d878f66-9f8d-4893-bc1f-e0f0cd863c9e /mnt/sdata00 auto nosuid,nodev,nofail,x-gvfs-show 0 0
+UUID=18e9869d-2869-4409-bef6-0e47b08a1fea /mnt/md0 ext4 defaults,nofail,discard 0 0
+tmpfs /milk/shm tmpfs rw,nosuid,nodev

@@ -4,8 +4,6 @@ RTCDIR="${HOME}/Real-Time-Control"
 
 
 
-
-
 # ==============================================================
 # Deploy RTC scripts
 # ==============================================================
@@ -27,13 +25,45 @@ mkdir -p scexaoRTCsoft
 
 
 
-exit
 
 
-cd scexaoRTCbin
+
+# COMPILE EXECUTABLES
+cd ${HOME}/scexaoRTCbin
 
 # compile and install setlatency executable
 gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatency/setlatency.c
+
+
+
+
+
+
+
+# ==============================================================
+# NETWORK
+# ==============================================================
+
+sudo cp ${HOME}/scexaoRTCconf/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
+sudo netplan apply
+
+
+
+# ==============================================================
+# STORAGE DRIVES
+# ==============================================================
+
+# create directories
+cd /mnt
+
+sudo mkdir sdata00
+sudo chown scexao sdata00/
+sudo chgrp scexao sdata00/
+
+sudo mkdir md0
+sudo chown scexao md0/
+sudo chgrp scexao md0/
+
 
 
 
@@ -57,6 +87,12 @@ sudo apt install -y geany
 sudo apt install -y gparted
 sudo apt install -y iotop
 sudo apt install -y numactl
+
+
+
+
+
+
 
 
 
@@ -101,8 +137,6 @@ sudo mount /milk/shm
 # DM driver
 # ==============================================================
 
-
-
 cd $HOME
 mkdir -p src/DMoptical
 cd src/DMoptical
@@ -129,8 +163,6 @@ rsync -au --progress /home/scexao/Real-Time-Control/scexaoRTCprogs/DMoptical/* .
 
 #In tool/bmc_ltest.c
 + #include <sys/time.h>
-
-
 
 #Compile and install:
 
