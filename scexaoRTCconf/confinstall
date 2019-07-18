@@ -2,3 +2,10 @@
 
 ln -s ${PWD}/tmux.conf ${HOME}/.tmux.conf
 
+
+# gpg --batch --passphrase XXXX -c file.txt
+# gpg --batch --passphrase XXXX file.txt.gpg
+
+read -s -p "Enter GPG passphrase: " PASS
+
+gpg --batch --passphrase $PASS 
