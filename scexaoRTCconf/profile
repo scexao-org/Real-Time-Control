@@ -1,7 +1,8 @@
 
 export MILK_SHM_DIR=/milk/shm
+export CACAO_DIR=/home/scexao/src/cacao
 
-export PATH=$PATH:/usr/local/bin:/home/scexao/bin
+export PATH=$PATH:/usr/local/bin:/home/scexao/bin:$CACAO_DIR/bin
 export PATH=$PATH:/home/scexao/scexaoRTCbin
 
 export PATH=$PATH:/usr/local/cuda-10.1/bin
