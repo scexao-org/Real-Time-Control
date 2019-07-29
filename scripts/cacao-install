@@ -1,0 +1,36 @@
+#!/bin/bash
+
+cd ${HOME}
+sudo apt-get install -y cmake flex bison pkg-config
+sudo apt-get install -y libcfitsio-dev libreadline-dev libfftw3-dev libgsl-dev libncurses5-dev 
+
+mkdir -p src
+cd src
+git clone --recursive https://github.com/cacao-org/cacao cacao
+cd cacao
+git submodule foreach "(git checkout dev; git pull)"
+git checkout dev; git pull
+mkdir _build
+cd _build
+cmake .. -DUSE_CUDA=ON -DUSE_MAGMA=ON
+sudo make install
+sudo ln -s /usr/local/bin/cacao /usr/local/bin/milk
+
+# post installation
+
+echo "/usr/local/lib" > usrlocal.conf
+sudo mv usrlocal.conf /etc/ld.so.conf.d/
+sudo ldconfig -v
+
+cd ${HOME}
+cd src/cacao
+mkdir -p bin
+cd bin
+find /home/scexao/src/cacao/ -executable -type f -name "milk-*" -print0 | xargs -0 -I {} ln -s {} .
+find /home/scexao/src/cacao/ -executable -type f -name "cacao-*" -print0 | xargs -0 -I {} ln -s {} .
+
+echo "tmpfs /milk/shm tmpfs rw,nosuid,nodev" | sudo tee -a /etc/fstab
+sudo mkdir -p /milk/shm
+sudo mount /milk/shm
+
+
