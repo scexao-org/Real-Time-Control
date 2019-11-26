@@ -3,6 +3,8 @@
 
 Real-time control (RTC) software, deployed on computer scexaoRTC
 
+Documentation : https://github.com/scexao-org/Real-Time-Control/wiki
+
 ## Deployment
 
 To deploy:
