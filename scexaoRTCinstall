@@ -1,24 +1,17 @@
 #!/bin/bash
 
 RTCDIR="${HOME}/Real-Time-Control"
-
+cd ${RTCDIR}
 
 
 # ==============================================================
 # Deploy RTC scripts
 # ==============================================================
 
-cd ${HOME}
-mkdir -p scexaoRTCbin
-# populate scexaoRTCbin
-cp ${RTCDIR}/scexaoRTCbin/* ${HOME}/scexaoRTCbin/
-
-cd ${HOME}
-mkdir -p scexaoRTCconf
-# populate scexaoRTCconf
-cp ${RTCDIR}/scexaoRTCconf/* ${HOME}/scexaoRTCconf/
-cd ${HOME}/scexaoRTCconf
+cd scexaoRTCconf
 ./confinstall
+cd ..
+
 source ~/.profile
 
 mkdir -p scexaoRTCsoft
@@ -29,22 +22,16 @@ mkdir -p scexaoRTCsoft
 
 
 # COMPILE EXECUTABLES
-cd ${HOME}/scexaoRTCbin
+cd scexaoRTCbin
 
 # compile and install setlatency executable
 gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatency/setlatency.c
-
-
-
-
-
-
 
 # ==============================================================
 # NETWORK
 # ==============================================================
 
-sudo cp ${HOME}/scexaoRTCconf/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
+sudo cp ${RTCDIR}/scexaoRTCconf/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
 sudo netplan apply
 
 # to check hardware interfaces:
@@ -81,7 +68,7 @@ sudo mkdir md0
 sudo chown scexao md0/
 sudo chgrp scexao md0/
 
-cd ${HOME}/scexaoRTCconf/
+cd ${RTCDIR}/scexaoRTCconf/
 cat /etc/fstab fstabadd > fstab.new
 cp /etc/fstab fstab.old
 sudo cp fstab.new /etc/fstab
@@ -106,15 +93,7 @@ sudo apt install -y wmctrl
 
 
 # Misc convenience and tools
-sudo apt install -y geany
-sudo apt install -y gparted
-sudo apt install -y iotop
-sudo apt install -y numactl
-
-sudo apt install -y saods9 
-
-
-
+sudo apt install -y geany gparted iotop numactl saods9
 
 
 
@@ -159,14 +138,73 @@ cd ../bin
 sudo insmod bmc_mdrv.ko
 sudo chmod o+rw /dev/bmc_mdrv*
 
+# ==============================================================
+# KICK IN A PYTHON INSTALL (/home/scexao/anaconda3)
+# ==============================================================
 
+cd $HOME && mkdir -p os_install && cd os_install
+wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+bash Anaconda3-2020.02-Linux-x86_64.sh 
 
-
-
-
+echo -e "\n# Anaconda3" >> $HOME/.profile_scexaoRTC
+echo "export PATH=\$HOME/miniconda3/bin:\$PATH"  >> $HOME/.profile_scexaoRTC
+source ../.profile
 
 
 # ==============================================================
 # CONFIGURE CACAO 
 # ==============================================================
+
+# Now we need milk and cacao
+## MILK
+
+cd $HOME/src
+git clone --recursive https://www.github.com/milk-org/milk-package.git milk
+cd milk
+# git checkout dev
+git submodule update
+pip install pybind11
+./compile.sh
+
+echo -e "\n# MILK package" >> $HOME/.profile_scexaoRTC
+echo "export MILK_SHM_DIR=/milk/shm" >> $HOME/.profile_scexaoRTC
+echo "export MILK_ROOT=\$HOME/src/milk" >> $HOME/.profile_scexaoRTC
+echo "export MILK_INSTALLDIR=/usr/local/milk" >> $HOME/.profile_scexaoRTC
+echo "export PATH=\$PATH:\$MILK_INSTALLDIR/bin" >> $HOME/.profile_scexaoRTC
+echo "export PKG_CONFIG_PATH=\$PKG_CONFIG_PATH:\$MILK_INSTALLDIR/lib/pkgconfig" >> $HOME/.profile_scexaoRTC
+source $HOME/.profile
+
+echo "/usr/local/magma/lib" > magma.conf
+sudo mv magma.conf /etc/ld.so.conf.d/
+sudo ldconfig -v
+
+# Make the tmpfs disk
+echo "tmpfs /milk/shm tmpfs rw,nosuid,nodev" | sudo tee -a /etc/fstab
+sudo mkdir -p /milk/shm
+sudo mount /milk/shm
+
+## pyMilk
+
+cd $HOME/src
+git clone https://www.github.com/milk-org/pyMilk.git pyMilk
+cd pyMilk
+pip install -e .
+echo -e "\n# pyMILK python package" >> $HOME/.profile_scexaoRTC
+echo "export PYTHONPATH=\$MILK_INSTALLDIR/python:\$PYTHONPATH" >> $HOME/.profile_scexaoRTC
+source $HOME/.profile
+
+## CACAO
+
+cd $HOME/src
+git clone --recursive https://github.com/cacao-org/cacao cacao
+cd cacao
+# git checkout dev-v1.01
+git submodule update
+./compile.sh
+echo -e "\n# CACAO package" >> $HOME/.profile_scexaoRTC
+echo "export CACAO_ROOT=\$HOME/src/cacao" >> $HOME/.profile_scexaoRTC
+echo "export CACAO_INSTALLDIR=/usr/local/cacao" >> $HOME/.profile_scexaoRTC
+echo "export PATH=\$PATH:\$CACAO_INSTALLDIR/bin" >> $HOME/.profile_scexaoRTC
+source $HOME/.profile
+
 

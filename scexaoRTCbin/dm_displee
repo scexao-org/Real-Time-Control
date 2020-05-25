@@ -21,8 +21,9 @@ import struct
 import os
 from PIL import Image
 import time
-from xaosim.scexao_shmlib import shm
+from pyMilk.interfacing.isio_shmlib import SHM as shm
 
+MILK_SHM_DIR = os.environ['MILK_SHM_DIR']
 
 hmsg = """
 DM DISPLAY INSTRUCTIONS
@@ -92,10 +93,10 @@ cntloop = 0                    # counter
 # ------------------------------------------------------------------
 
 for i in range(nch):
-    exec("disp%02d = shm('/tmp/dm00disp%02d.im.shm', verbose=False)" % (i,i))
+    exec("disp%02d = shm('%s/dm00disp%02d.im.shm', verbose=False)" % (i,MILK_SHM_DIR,i))
 
-disp = shm('/tmp/dm00disp.im.shm', verbose=False)
-volt = shm('/tmp/dmvolt.im.shm', verbose=False)
+disp = shm(MILK_SHM_DIR + '/dm00disp.im.shm', verbose=False)
+volt = shm(MILK_SHM_DIR + '/dmvolt.im.shm', verbose=False)
 
 # ------------------------------------------------------------------
 #             short hands for shared memory data access

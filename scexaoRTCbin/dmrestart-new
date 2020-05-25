@@ -255,6 +255,7 @@ echo "[9] Start DM optical link interface ..."
 sleep 1
 tmux new-session -d -s dmopttrig
 sleep 1
+tmux send-keys -t dmopttrig "creashmim dmvolt 50 50" C-m
 tmux send-keys -t dmopttrig "cd /home/scexao/src/DM_BMC/" C-m
 tmux send-keys -t dmopttrig "sudo insmod /home/scexao/src/DMoptical/bin/bmc_mdrv.ko" C-m
 tmux send-keys -t dmopttrig "sudo chmod o+rw /dev/bmc_mdrv0" C-m

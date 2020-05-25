@@ -11,8 +11,8 @@ To deploy:
 
     cd ~
     git clone https://github.com/scexao-org/Real-Time-Control
-    ln -s Real-Time-Control/bin /home/scexao/bin
+    ln -s Real-Time-Control/scexaoRTCbin /home/scexao/bin
     
-Add to .bashrc:
+Add to .bashrc/.profile:
 
     export PATH=$PATH:/usr/local/bin:/home/scexao/bin

@@ -1,27 +1,40 @@
 #!/bin/bash
 
-
-
-
-
 # adapted from https://www.osadl.org/uploads/media/mklatencyplot.bash
+this_pid=`echo $$`
 
-
-INDEX=$1
+INDEX=$1 # Index of test
 STRESS=$2
+DURATION=$3 # Duration of stress in seconds 
 
+MLOCK=0
+HASCSET="NO"
 NBcores=$(nproc)
 
+# Check for a cset named "user" from cset shield
+cset set user > /dev/null
 
-LOOPS=3000000
-MLOCK=1
+if [ $? = "2" ]; then
+	echo "NO CSET: fallback on taskset affinity"
+	CSET=`taskset -p -c $this_pid | awk {'print $NF'}`
+else
+	HASCSET="YES"
+	CSET=`cset set | grep user | awk {'print $2'}`
+fi
+IFS=- read cpuMin cpuMax <<< ${CSET}
+NBcores=$((${cpuMax} - ${cpuMin} + 1))
+echo "cset/taskset: using CPUs ${CSET} (${NBcores} cores)"
+
+# Set constants and compute number of iterations - 5kHz polling
 INTV=200 # interval [us]
-PRIO=90
-
+PRIO=91
+LOOPS=$(($((${DURATION} * 1000000)) / ${INTV})) # 3000000 # for 10 mins
 
 # Write configuration file to document settings
 uname -a > rttest.conf
-echo "$NBcores cores"  >> rttest.conf
+echo "${NBcores} cores"  >> rttest.conf
+echo "CSET = ${CSET}" >> rttest.conf
+echo "DURATION = ${DURATION} sec" >> rttest.conf
 echo "LOOPS = ${LOOPS}" >> rttest.conf
 echo "MLOCK = ${MLOCK}" >> rttest.conf
 echo "INTV  = ${INTV}" >> rttest.conf
@@ -30,8 +43,14 @@ echo "PRIO  = ${PRIO}" >> rttest.conf
 
 if [ ${STRESS} = "1" ]; then
 echo "STRESS TEST"
-sudo stress-ng --cpu 0 --io 0 --vm 0 --vm-bytes 100G --timeout 610s &
-sleep 5
+if [ ${HASCSET} = "NO" ]; then
+sudo stress-ng --cpu $NBcores --taskset=$CSET --io $NBcores --timeout $((${DURATION} + 25))s &
+# removed --vm $NBcores --vm-bytes 20
+else
+sudo cset proc --exec user stress-ng -- --cpu $NBcores --taskset=$CSET --io $NBcores --timeout $((${DURATION} + 25))s &
+# removed --vm $NBcores --vm-bytes 20G
+fi
+sleep 10
 else
 echo "IDLE TEST"
 fi
@@ -39,14 +58,46 @@ fi
 
 
 
-echo "Running cyclictest for 10 mn [ctrl-C to stop prematurely] ..."
+echo "Running cyclictest for ${DURATION} sec [ctrl-C to stop prematurely] ..."
 date
-
-sudo cyclictest --loops=${LOOPS} -m -S --priority=${PRIO} --interval=${INTV} -h10000 -q > tmp_output.dat 
-
+if [ ${MLOCK} = "1" ]; then
+	if [ ${HASCSET} = "NO" ]; then
+	sudo cyclictest --loops=${LOOPS} -m -a $CSET -t $NBcores --priority=${PRIO}  --interval=${INTV} --policy=rr -h10000 -q > tmp_output.dat
+	else
+	sudo cset shield --exec cyclictest -- --loops=${LOOPS} -m -a $CSET -t $NBcores --priority=${PRIO} --interval=${INTV} --policy=rr -h10000 -q > tmp_output.dat
+	fi
+else
+	if [ ${HASCSET} = "NO" ]; then
+	sudo cyclictest --loops=${LOOPS} -a $CSET -t $NBcores --priority=${PRIO}  --interval=${INTV} --policy=rr -h10000 -q > tmp_output.dat
+	else
+	sudo cset shield --exec cyclictest -- --loops=${LOOPS} -a $CSET -t $NBcores --priority=${PRIO} --interval=${INTV} --policy=rr -h10000 -q > tmp_output.dat
+	fi
+fi
 date
 echo ""
+if [ ${STRESS} = "1" ]; then
+# Meh, don't do that... it locks the machine when stress-ng-vm process stay on
+#sudo pkill -SIGINT `pgrep "stress-ng$"` # only kill the PARENT stressor process.
+# Wait for stressor termination
+DONE=0
+while [ $DONE = 0 ]
+do
+	pgrep stress-ng > /dev/null
+	if [ $? = 0 ]; then
+		sleep 2
+	else
+		DONE=1
+	fi
+done
+fi
+
 echo "Done"
+
+####
+#exit
+####
+
+
 
 
 # Get maximum latency
@@ -67,7 +118,7 @@ do
   cut -f1,$column tmp_histogram.dat > tmp_histogram$i.dat
 done
 
-rm tmp_histogram.dat
+# rm tmp_histogram.dat
 
 
 # 6. Create plot command header
@@ -109,8 +160,6 @@ for i in `seq 1 $NBcores`
 do
 rm tmp_histogram$i.dat
 done
-
-sudo pkill stress-ng
 
 cp plot.png latencyplot.$1.$2.png
 cp rttest.conf latencyconf.$1.$2.txt
