@@ -7,3 +7,8 @@
 
 __pycache__
 *.pyc
+*egg-info
+
+# Build folders
+
+build
