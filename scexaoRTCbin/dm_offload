@@ -16,10 +16,9 @@ import sys
 import numpy as np
 import math as m
 import copy
+from xaosim.scexao_shmlib import shm
 
 home = os.getenv("HOME")
-sys.path.append(home+'/src/lib/python/')
-from scexao_shm import shm
 
 args = sys.argv[1:]
 if args != []:
@@ -56,8 +55,8 @@ def asymetry(nim, cx, cy):
             #    loop_on = True
             dm_command += temp2
             time.sleep(0.001)
-    asx = np.mean(dm_command[0:cx,:])-np.mean(dm_command[cx:,:])
-    asy = np.mean(dm_command[:,0:cy])-np.mean(dm_command[:,cy:])
+    asx = np.mean(dm_command[:,0:cx])-np.mean(dm_command[:,cx:])
+    asy = np.mean(dm_command[0:cy,:])-np.mean(dm_command[cy:,:])
     return [asx, asy, loop_on]
 
 # Main
@@ -89,14 +88,14 @@ try:
         # if the psf is still north-west of the hotspot, move south-east
         if abs(asx) > threshold:
             x_m = int(m.copysign(10, asx))
-            print(x_m)
-            os.system("ssh scexao@scexao2 \"/home/scexao/bin/devices/dm_stage y push %+i\"" %x_m)
+            print("x:",x_m)
+            os.system("ssh scexao@scexao2 \"/home/scexao/bin/devices/dm_stage x push %+i\"" %x_m)
             time.sleep(0.1)
             #os.system("ssh scexao@scexao2 \"/home/scexao/bin/log DM offload: offloading y %+i\"" %x_m)
         if abs(asy) > threshold:
             y_m = int(m.copysign(10, asy))
-            print(y_m)
-            os.system("ssh scexao@scexao2 \"/home/scexao/bin/devices/dm_stage x push %+i\"" %y_m)
+            print("y:",y_m)
+            os.system("ssh scexao@scexao2 \"/home/scexao/bin/devices/dm_stage y push %+i\"" %y_m)
             time.sleep(0.1)
             #os.system("ssh scexao@scexao2 \"/home/scexao/bin/log DM offload: offloading x %+i\"" %y_m)
     shm_im.close()

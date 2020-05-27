@@ -7,10 +7,7 @@ import matplotlib.cm as cm
 import os
 import time
 from PIL import Image
-
-home = os.getenv('HOME')
-sys.path.append(home+'/src/lib/python/')
-from   scexao_shm   import shm
+from xaosim.scexao_shmlib import shm
 
 
 

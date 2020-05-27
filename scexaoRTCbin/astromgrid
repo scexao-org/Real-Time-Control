@@ -3,6 +3,14 @@
 EXPECTED_ARGS=2
 DMindex="00"
 
+datestr=`date -u +%Y%m%d`
+timestr=`date -u +%Y%m%dT%H%M%S.%3N`
+LOGDIR="/home/scexao/logdir/${datestr}/"
+mkdir -p ${LOGDIR}
+LOGFILE="astromgrid.${datestr}.log"
+
+echo "${timestr} $0 $@" >> ${LOGDIR}/${LOGFILE} 
+
 
 GRIDFILE="/home/scexao/conf/dm_patterns/grid2.fits"
 
@@ -319,7 +327,9 @@ GEOMname="Xdiag-Ydiag"
 sep=$( echo "$CPAm $AstroGridBin" | awk '{printf "%.2f \n", sqrt(2.0)/2.0*$1/$2}' )
 fi
 
-echo "sep = $sep"
+echo "CPAm          = $CPAm"
+echo "AstroGridBin  = $AstroGridBin"
+echo "sep           = $sep"
 
 
 
