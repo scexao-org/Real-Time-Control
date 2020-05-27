@@ -1,0 +1,9 @@
+# Variety of temporary files
+
+*~
+\#*\#
+
+# Python junk
+
+__pycache__
+*.pyc
