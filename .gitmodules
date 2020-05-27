@@ -1,0 +1,12 @@
+[submodule "scexaoRTCsrc/lib/python/fpao_tools"]
+	path = scexaoRTCsrc/lib/python/fpao_tools
+	url = https://github.com/fmartinache/fpao_tools.git
+[submodule "scexaoRTCsrc/lib/python/g2cam"]
+	path = scexaoRTCsrc/lib/python/g2cam
+	url = http://github.com/naojsoft/g2cam
+[submodule "scexaoRTCsrc/lib/python/xaosim"]
+	path = scexaoRTCsrc/lib/python/xaosim
+	url = https://github.com/fmartinache/xaosim.git
+[submodule "scexaoRTCsrc/lib/python/xara"]
+	path = scexaoRTCsrc/lib/python/xara
+	url = https://github.com/fmartinache/xara.git
