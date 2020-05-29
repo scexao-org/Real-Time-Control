@@ -8,148 +8,107 @@ cd ${RTCDIR}
 # Deploy RTC scripts
 # ==============================================================
 
-cd scexaoRTCconf
-./confinstall
-cd ..
 
-source ~/.profile
+echo "Perform the conf installation ?"
+echo "Will install files in conf subfolder, ssh keys, netplan, fstab"
+echo "Requires the old drive plugged in for copying from it"
+echo "If not possible - abort here (Ctrl + C) and work manually through ./conf/confinstall"
+read -s -p "Do it? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    cd conf
+    ./confinstall
+    cd ..
+    source ~/.profile
+fi
 
-mkdir -p scexaoRTCsoft
+echo "Symlinking Real-Time-Control/bin to ~/bin and adding to PATH..."
+ln -s Real-Time-Control/bin /home/scexao/bin
+echo -e "\n# General RTC binaries" >> $HOME/.profile_scexaoRTC
+echo "export PATH=\$PATH:/usr/local/bin:/home/scexao/bin" >> $HOME/.profile_scexaoRTC
 
+
+# ==============================================================
+# VARIOUS INSTALLS
+# ==============================================================
+
+# The OS is brand new... let's double check
+sudo apt update
+sudo apt upgrade -y
+
+# x2go
+sudo apt install -y x2goserver
+# LXDE
+sudo apt install -y --no-install-recommends lxde
+
+# Other
+sudo apt install -y terminator wmctrl geany gparted iotop numactl saods9
 
 
 
 
 
 # COMPILE EXECUTABLES
-cd scexaoRTCbin
 
 # compile and install setlatency executable
-gcc -o setlatency ${RTCDIR}/scexaoRTCprogs/setlatency/setlatency.c
-
-# ==============================================================
-# NETWORK
-# ==============================================================
-
-sudo cp ${RTCDIR}/scexaoRTCconf/50-cloud-init.yaml /etc/netplan/50-cloud-init.yaml
-sudo netplan apply
-
-# to check hardware interfaces:
-# sudo lshw -class network -businfo
-
-# Bus info          Device     Class          Description
-# =======================================================
-# pci@0000:01:00.0  enp1s0f0   network        Ethernet Controller 10G X550T
-# pci@0000:01:00.1  enp1s0f1   network        Ethernet Controller 10G X550T
-# pci@0000:1b:00.0  enp27s0f0  network        82599ES 10-Gigabit SFI/SFP+ Network Connection
-# pci@0000:1b:00.1  enp27s0f1  network        82599ES 10-Gigabit SFI/SFP+ Network Connection
-# pci@0000:86:00.0  ens4f0     network        MT27700 Family [ConnectX-4]
-# pci@0000:86:00.1  ens4f1     network        MT27700 Family [ConnectX-4]
-# pci@0000:db:00.0             network        MT27800 Family [ConnectX-5]
-# pci@0000:db:00.1             network        MT27800 Family [ConnectX-5]
-
-
-
-
-
-
-# ==============================================================
-# STORAGE DRIVES
-# ==============================================================
-
-# create directories
-cd /mnt
-
-sudo mkdir sdata00
-sudo chown scexao sdata00/
-sudo chgrp scexao sdata00/
-
-sudo mkdir md0
-sudo chown scexao md0/
-sudo chgrp scexao md0/
-
-cd ${RTCDIR}/scexaoRTCconf/
-cat /etc/fstab fstabadd > fstab.new
-cp /etc/fstab fstab.old
-sudo cp fstab.new /etc/fstab
-
-sudo mount /mnt/md0
-sudo mount /mnt/sdata00
-
-
-
-
-# ==============================================================
-# REMOTE ACCESS, misc tools
-# ==============================================================
-
-# x2go
-sudo apt install -y x2goserver
-sudo apt install -y --no-install-recommends lxde
-sudo apt install -y terminator
-
-# To increase number of desktops etc...
-sudo apt install -y wmctrl
-
-
-# Misc convenience and tools
-sudo apt install -y geany gparted iotop numactl saods9
-
-
+echo "Compiling setlatency utility..."
+cd bin
+gcc -o setlatency ${RTCDIR}/progs/setlatency/setlatency.c
+cd ..
 
 # ==============================================================
 # DM driver
 # ==============================================================
+read -s -p "Compile DM drivers [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    echo "Compiling BMC DM drivers..."
+    cd $HOME
+    mkdir -p src/DMoptical
+    cd src/DMoptical
+    rsync -au --progress ${RTCDIR}/progs/DMoptical/* .
 
-cd $HOME
-mkdir -p src/DMoptical
-cd src/DMoptical
-rsync -au --progress /home/scexao/Real-Time-Control/scexaoRTCprogs/DMoptical/* .
+    #Compile and install:
+    . compile.sh
 
-# content was uncompressed by:
-# tar -jxvf bmc_linux_sdk_2.2.tbz2
-# Note: List of changes made to source code:
+    # content was uncompressed by:
+    # tar -jxvf bmc_linux_sdk_2.2.tbz2
+    # Note: List of changes made to source code:
 
-# In drv/bmc_mdrv.c
-#- #include <asm/uaccess.h>
-#+ #include <linux/uaccess.h>
+    # In drv/bmc_mdrv.c
+    #- #include <asm/uaccess.h>
+    #+ #include <linux/uaccess.h>
 
-#In drv/bmc_mdrv.c
-#- #include <sys/ioctl.h>
-#+ #include <linux/ioctl.h>
+    #In drv/bmc_mdrv.c
+    #- #include <sys/ioctl.h>
+    #+ #include <linux/ioctl.h>
 
-#In drv/bmc_mdrv.c
-#+ #include <linux/uaccess.h>
+    #In drv/bmc_mdrv.c
+    #+ #include <linux/uaccess.h>
 
-#In lib/bmc_mdlib.c
-#- #include <linux/ioctl.h>
-#+ #include <sys/ioctl.h>
+    #In lib/bmc_mdlib.c
+    #- #include <linux/ioctl.h>
+    #+ #include <sys/ioctl.h>
 
-#In tool/bmc_ltest.c
-+ #include <sys/time.h>
-
-#Compile and install:
-
-mkdir -p tmp
-mkdir -p lib
-cd src
-make
-cd ../bin
-sudo insmod bmc_mdrv.ko
-sudo chmod o+rw /dev/bmc_mdrv*
+    #In tool/bmc_ltest.c
+    + #include <sys/time.h>
+fi
 
 # ==============================================================
 # KICK IN A PYTHON INSTALL (/home/scexao/anaconda3)
 # ==============================================================
 
-cd $HOME && mkdir -p os_install && cd os_install
-wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
-bash Anaconda3-2020.02-Linux-x86_64.sh 
+read -s -p "Install a fresh Anaconda3 ? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    
+    echo "Installing Anaconda 3..."
+    cd $HOME && mkdir -p os_install && cd os_install
+    wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh
+    bash Anaconda3-2020.02-Linux-x86_64.sh 
 
-echo -e "\n# Anaconda3" >> $HOME/.profile_scexaoRTC
-echo "export PATH=\$HOME/miniconda3/bin:\$PATH"  >> $HOME/.profile_scexaoRTC
-source ../.profile
+    echo -e "\n# Anaconda3" >> $HOME/.profile_scexaoRTC
+    echo "export PATH=\$HOME/miniconda3/bin:\$PATH"  >> $HOME/.profile_scexaoRTC
+    source ../.profile
 
+fi
 
 # ==============================================================
 # CONFIGURE CACAO 
@@ -157,54 +116,96 @@ source ../.profile
 
 # Now we need milk and cacao
 ## MILK
+read -s -p "Install MILK ? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    sudo apt-get install -y cmake flex bison pkg-config
+    sudo apt-get install -y libcfitsio-dev libreadline-dev libfftw3-dev libgsl-dev libncurses5-dev 
 
-cd $HOME/src
-git clone --recursive https://www.github.com/milk-org/milk-package.git milk
-cd milk
-# git checkout dev
-git submodule update
-pip install pybind11
-./compile.sh
+    cd $HOME/src
+    git clone --recursive https://www.github.com/milk-org/milk-package.git milk
+    cd milk
+    pip install pybind11
 
-echo -e "\n# MILK package" >> $HOME/.profile_scexaoRTC
-echo "export MILK_SHM_DIR=/milk/shm" >> $HOME/.profile_scexaoRTC
-echo "export MILK_ROOT=\$HOME/src/milk" >> $HOME/.profile_scexaoRTC
-echo "export MILK_INSTALLDIR=/usr/local/milk" >> $HOME/.profile_scexaoRTC
-echo "export PATH=\$PATH:\$MILK_INSTALLDIR/bin" >> $HOME/.profile_scexaoRTC
-echo "export PKG_CONFIG_PATH=\$PKG_CONFIG_PATH:\$MILK_INSTALLDIR/lib/pkgconfig" >> $HOME/.profile_scexaoRTC
-source $HOME/.profile
+    read -s -p "Use MILK development branch ? [y/n]: " YESNOTMP
+    if [ $YESNOTMP = "y" ]; then
+        git checkout dev
+        git submodule foreach "(git checkout dev; git pull)"
+    else
+        git submodule update
+    fi
+    echo "Compiling and installing MILK."
+    ./compile.sh
 
-echo "/usr/local/magma/lib" > magma.conf
-sudo mv magma.conf /etc/ld.so.conf.d/
-sudo ldconfig -v
+    echo -e "\n# MILK package" >> $HOME/.profile_scexaoRTC
+    echo "export MILK_SHM_DIR=/milk/shm" >> $HOME/.profile_scexaoRTC
+    echo "export MILK_ROOT=\$HOME/src/milk" >> $HOME/.profile_scexaoRTC
+    echo "export MILK_INSTALLDIR=/usr/local/milk" >> $HOME/.profile_scexaoRTC
+    echo "export PATH=\$PATH:\$MILK_INSTALLDIR/bin" >> $HOME/.profile_scexaoRTC
+    echo "export PKG_CONFIG_PATH=\$PKG_CONFIG_PATH:\$MILK_INSTALLDIR/lib/pkgconfig" >> $HOME/.profile_scexaoRTC
+    source $HOME/.profile
 
-# Make the tmpfs disk
-echo "tmpfs /milk/shm tmpfs rw,nosuid,nodev" | sudo tee -a /etc/fstab
-sudo mkdir -p /milk/shm
-sudo mount /milk/shm
+    echo "/usr/local/magma/lib" > magma.conf
+    sudo mv magma.conf /etc/ld.so.conf.d/
+    sudo ldconfig -v
 
-## pyMilk
+    # Make the tmpfs disk
+    echo "Making a tmpfs drive on /milk/shm..."
+    echo "tmpfs /milk/shm tmpfs rw,nosuid,nodev" | sudo tee -a /etc/fstab
+    sudo mkdir -p /milk/shm
+    sudo mount /milk/shm
 
-cd $HOME/src
-git clone https://www.github.com/milk-org/pyMilk.git pyMilk
-cd pyMilk
-pip install -e .
-echo -e "\n# pyMILK python package" >> $HOME/.profile_scexaoRTC
-echo "export PYTHONPATH=\$MILK_INSTALLDIR/python:\$PYTHONPATH" >> $HOME/.profile_scexaoRTC
-source $HOME/.profile
+    echo "Gathering milk-* binaries in src/milk/bin..."
+    mkdir -p bin && cd bin
+    find . -executable -type f -name "milk-*" -print0 | xargs -0 -I {} ln -s {} .
+    cd ..
+fi
 
 ## CACAO
+read -s -p "Install CACAO ? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    cd $HOME/src
+    git clone --recursive https://github.com/cacao-org/cacao cacao
+    cd cacao
+    git submodule update
+    git branch --list
+    read -s -p "Use branch dev (no for branch name)? [y/n]: " YESNOTMP
+    if [ $YESNOTMP = "y" ]; then
+        git checkout dev
+        git submodule update
+    else        
+        read -s -p "Which branch (empty for master)? " CACAO_BRANCH
+        if [ $CACAO_BRANCH ]; then
+            git checkout $CACAO_BRANCH
+            git submodule update
+        fi
+    fi
+    read -s -p "Pull submodules to latest? [y/n]: " YESNOTMP
+    if [ $YESNOTMP = "y" ]; then
+        git checkout dev
+        git submodule foreach "(git checkout dev; git pull)"
+    fi
 
-cd $HOME/src
-git clone --recursive https://github.com/cacao-org/cacao cacao
-cd cacao
-# git checkout dev-v1.01
-git submodule update
-./compile.sh
-echo -e "\n# CACAO package" >> $HOME/.profile_scexaoRTC
-echo "export CACAO_ROOT=\$HOME/src/cacao" >> $HOME/.profile_scexaoRTC
-echo "export CACAO_INSTALLDIR=/usr/local/cacao" >> $HOME/.profile_scexaoRTC
-echo "export PATH=\$PATH:\$CACAO_INSTALLDIR/bin" >> $HOME/.profile_scexaoRTC
-source $HOME/.profile
+    echo "Compiling and installing CACAO"
+    ./compile.sh
+    echo -e "\n# CACAO package" >> $HOME/.profile_scexaoRTC
+    echo "export CACAO_ROOT=\$HOME/src/cacao" >> $HOME/.profile_scexaoRTC
+    echo "export CACAO_INSTALLDIR=/usr/local/cacao" >> $HOME/.profile_scexaoRTC
+    echo "export PATH=\$PATH:\$CACAO_INSTALLDIR/bin" >> $HOME/.profile_scexaoRTC
+    source $HOME/.profile
 
+    echo "Gathering cacao-* binaries in src/cacao/bin..."
+    mkdir -p bin && cd bin
+    find . -executable -type f -name "cacao-*" -print0 | xargs -0 -I {} ln -s {} .
+    cd ..
+    
+fi
 
+## pyMilk
+read -s -p "Install pyMilk ? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    cd $HOME/src
+    git clone https://www.github.com/milk-org/pyMilk.git pyMilk
+    cd pyMilk
+    pip install -e .
+    source $HOME/.profile
+fi

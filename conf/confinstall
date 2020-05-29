@@ -1,22 +1,130 @@
 #!/bin/bash
 
+# Tmux configuration
+echo "Installing tmux.conf"
 cp ${PWD}/tmux.conf ${HOME}/.tmux.conf
 
 
 # add entries to .profile
+echo "Installing .profile_scexaoRTC"
 cp ${PWD}/profile ${HOME}/.profile_scexaoRTC
 
 
 
+
+echo "Enter old install hard drive letter (X from /dev/sdX)"
+echo "We assume that / part on this disk is part 2 - and possibly /home is part 3."
+read -p "Old install on disk X as in '/dev/sd{X}:' " PART
+
+if [ $PART ]; then
+
+    # MOUNT OLD RTC DRIVE
+    MPOINT=/mnt/oldRTCroot
+    sudo mkdir -p $MPOINT
+    sudo mount /dev/sd${PART}2 $MPOINT
+
+    OLD_HAS_SEPARATE_HOME=1
+    if [ -d "$MPOINT/home/scexao" ]; then
+        OLD_HAS_SEPARATE_HOME=0
+        MPOINT_HOME=${MPOINT}/home
+    else
+        MPOINT_HOME=/mnt/oldRTChome
+        sudo mkdir -p $MPOINT_HOME
+        sudo mount /dev/sd${PART}3 $MPOINT_HOME
+    fi
+    # ======================
+
+    # ==============================================================
+    # SSH
+    # ==============================================================
+    echo "Installing $HOME/.ssh contents"
+    mkdir -p $HOME/.ssh
+    sudo cp $MPOINT_HOME/scexao/.ssh/* $HOME/.ssh/
+
+    # ==============================================================
+    # NETWORK
+    # ==============================================================
+    echo "Installing netplan"
+    sudo cp $MPOINT/etc/netplan/99-scexaoRTCnetwork.yaml /etc/netplan/
+    sudo netplan apply
+
+    # to check hardware interfaces:
+    # sudo lshw -class network -businfo
+
+    # Bus info          Device     Class          Description
+    # =======================================================
+    # pci@0000:01:00.0  enp1s0f0   network        Ethernet Controller 10G X550T
+    # pci@0000:01:00.1  enp1s0f1   network        Ethernet Controller 10G X550T
+    # pci@0000:1b:00.0  enp27s0f0  network        82599ES 10-Gigabit SFI/SFP+ Network Connection
+    # pci@0000:1b:00.1  enp27s0f1  network        82599ES 10-Gigabit SFI/SFP+ Network Connection
+    # pci@0000:86:00.0  ens4f0     network        MT27700 Family [ConnectX-4]
+    # pci@0000:86:00.1  ens4f1     network        MT27700 Family [ConnectX-4]
+    # pci@0000:db:00.0             network        MT27800 Family [ConnectX-5]
+    # pci@0000:db:00.1             network        MT27800 Family [ConnectX-5]
+
+    # ==============================================================
+    # MOUNTPOINTS
+    # ==============================================================
+    echo "Preparing /etc/fstab"
+    echo "You SHOULD go inspect the fstab before rebooting."
+    # RAIDs mounts
+    echo "# SMALL RAID0" > fstabadd
+    cat $MPOINT/etc/fstab | grep "/mnt/md0" >> fstabadd
+    echo "# BID RAID6" >> fstabadd
+    cat $MPOINT/etc/fstab | grep "/mnt/sdata00" >> fstabadd
+    
+    # Old RTC
+    MOUNT_OPTS="defaults,nosuid,nodev,nofail"
+    if [ $OLD_HAS_SEPARATE_HOME = 0 ]; then
+        echo "# OLD RTC DRIVE" >> fstabadd
+        cat $MPOINT/etc/fstab | grep " / " -A1 | sed s:/:/mnt/oldRTC: | sed s:defaults:$MOUNT_OPTS: >> fstabadd
+    else
+        echo "# OLD RTC DRIVE - ROOT" >> fstabadd
+        cat $MPOINT/etc/fstab | grep " / " -A1 | sed s:/:/mnt/oldRTCroot: | sed s:defaults:$MOUNT_OPTS: >> fstabadd
+        echo "# OLD RTC DRIVE - HOME" >> fstabadd
+        cat $MPOINT/etc/fstab | grep " /home " -A1 | sed s:/:/mnt/oldRTChome: | sed s:defaults:$MOUNT_OPTS: >> fstabadd
+    fi
+    
+    # UNMOUNT OLD RTC DRIVE
+    sudo umount $MPOINT
+    if [ $OLD_HAS_SEPARATE_HOME = 0 ]; then
+        sudo umount $MPOINT_HOME
+    else
+        sudo mkdir -p /mnt/oldRTC
+        sudo rmdir /mnt/oldRTCroot
+    # ======================
+fi
+
+read -s -p "Do the contents of conf/fstabadd look OK ? [y/n]" YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    # create directories
+    echo "Amending fstab and mounting RAIDs"    
+
+    sudo mkdir /mnt/sdata00
+    sudo chown scexao /mnt/sdata00/
+    sudo chgrp scexao /mnt/sdata00/
+
+    sudo mkdir /mnt/md0
+    sudo chown scexao /mnt/md0/
+    sudo chgrp scexao /mnt/md0/
+
+    cat /etc/fstab fstabadd > fstab.new
+    cp /etc/fstab fstab.old
+    sudo cp fstab.new /etc/fstab
+
+    sudo mount /mnt/md0
+    sudo mount /mnt/sdata00
+fi
+
+# read -s -p "Enter GPG passphrase: " PASS
 
 # encrypt:
 # gpg --batch --passphrase XXXX -c file.txt
 
 # decrypt:
 # gpg --batch -d --passphrase XXXX file.txt.gpg
-
-read -s -p "Enter GPG passphrase: " PASS
-
-gpg --batch -d --passphrase $PASS 50-cloud-init.yaml.gpg > 50-cloud-init.yaml
-gpg --batch -d --passphrase $PASS fstabadd.gpg > fstabadd
+# if [ $PASS ]; then
+# gpg --batch -d --passphrase $PASS 50-cloud-init.yaml.gpg > 50-cloud-init.yaml
+# gpg --batch -d --passphrase $PASS fstabadd.gpg > fstabadd
+# fi
 
