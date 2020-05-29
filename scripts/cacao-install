@@ -1,36 +1,36 @@
 #!/bin/bash
 
-cd ${HOME}
-sudo apt-get install -y cmake flex bison pkg-config
-sudo apt-get install -y libcfitsio-dev libreadline-dev libfftw3-dev libgsl-dev libncurses5-dev 
-
-mkdir -p src
-cd src
+cd $HOME/src
 git clone --recursive https://github.com/cacao-org/cacao cacao
 cd cacao
-git submodule foreach "(git checkout dev; git pull)"
-git checkout dev; git pull
-mkdir _build
-cd _build
-cmake .. -DUSE_CUDA=ON -DUSE_MAGMA=ON
-sudo make install
-sudo ln -s /usr/local/bin/cacao /usr/local/bin/milk
+git submodule update
+git branch --list
+read -s -p "Use branch dev (no for branch name)? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    git checkout dev
+    git submodule update
+else        
+    read -s -p "Which branch (empty for master)? " CACAO_BRANCH
+    if [ $CACAO_BRANCH ]; then
+        git checkout $CACAO_BRANCH
+        git submodule update
+    fi
+fi
+read -s -p "Pull submodules to latest? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    git checkout dev
+    git submodule foreach "(git checkout dev; git pull)"
+fi
 
-# post installation
+echo "Compiling and installing CACAO"
+./compile.sh
+echo -e "\n# CACAO package" >> $HOME/.profile_scexaoRTC
+echo "export CACAO_ROOT=\$HOME/src/cacao" >> $HOME/.profile_scexaoRTC
+echo "export CACAO_INSTALLDIR=/usr/local/cacao" >> $HOME/.profile_scexaoRTC
+echo "export PATH=\$PATH:\$CACAO_INSTALLDIR/bin" >> $HOME/.profile_scexaoRTC
+source $HOME/.profile
 
-echo "/usr/local/lib" > usrlocal.conf
-sudo mv usrlocal.conf /etc/ld.so.conf.d/
-sudo ldconfig -v
-
-cd ${HOME}
-cd src/cacao
-mkdir -p bin
-cd bin
-find /home/scexao/src/cacao/ -executable -type f -name "milk-*" -print0 | xargs -0 -I {} ln -s {} .
-find /home/scexao/src/cacao/ -executable -type f -name "cacao-*" -print0 | xargs -0 -I {} ln -s {} .
-
-echo "tmpfs /milk/shm tmpfs rw,nosuid,nodev" | sudo tee -a /etc/fstab
-sudo mkdir -p /milk/shm
-sudo mount /milk/shm
-
-
+echo "Gathering cacao-* binaries in src/cacao/bin..."
+mkdir -p bin && cd bin
+find . -executable -type f -name "cacao-*" -print0 | xargs -0 -I {} ln -s {} .
+cd ..

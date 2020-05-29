@@ -1,0 +1,42 @@
+#!/bin/bash
+
+sudo apt-get install -y cmake flex bison pkg-config
+sudo apt-get install -y libcfitsio-dev libreadline-dev libfftw3-dev libgsl-dev libncurses5-dev 
+
+cd $HOME/src
+git clone --recursive https://www.github.com/milk-org/milk-package.git milk
+cd milk
+pip install pybind11
+
+read -s -p "Use MILK development branch ? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    git checkout dev
+    git submodule foreach "(git checkout dev; git pull)"
+else
+    git submodule update
+fi
+echo "Compiling and installing MILK."
+./compile.sh
+
+echo -e "\n# MILK package" >> $HOME/.profile_scexaoRTC
+echo "export MILK_SHM_DIR=/milk/shm" >> $HOME/.profile_scexaoRTC
+echo "export MILK_ROOT=\$HOME/src/milk" >> $HOME/.profile_scexaoRTC
+echo "export MILK_INSTALLDIR=/usr/local/milk" >> $HOME/.profile_scexaoRTC
+echo "export PATH=\$PATH:\$MILK_INSTALLDIR/bin" >> $HOME/.profile_scexaoRTC
+echo "export PKG_CONFIG_PATH=\$PKG_CONFIG_PATH:\$MILK_INSTALLDIR/lib/pkgconfig" >> $HOME/.profile_scexaoRTC
+source $HOME/.profile
+
+echo "/usr/local/magma/lib" > magma.conf
+sudo mv magma.conf /etc/ld.so.conf.d/
+sudo ldconfig -v
+
+# Make the tmpfs disk
+echo "Making a tmpfs drive on /milk/shm..."
+echo "tmpfs /milk/shm tmpfs rw,nosuid,nodev" | sudo tee -a /etc/fstab
+sudo mkdir -p /milk/shm
+sudo mount /milk/shm
+
+echo "Gathering milk-* binaries in src/milk/bin..."
+mkdir -p bin && cd bin
+find . -executable -type f -name "milk-*" -print0 | xargs -0 -I {} ln -s {} .
+cd ..
