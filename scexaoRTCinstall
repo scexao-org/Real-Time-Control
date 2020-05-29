@@ -41,7 +41,9 @@ sudo apt install -y x2goserver
 sudo apt install -y --no-install-recommends lxde
 
 # Other
-sudo apt install -y terminator wmctrl geany gparted iotop numactl saods9
+sudo apt install -y terminator wmctrl geany gparted iotop numactl saods9 nvtop cmake cpuset python3-pip
+# For cpuset
+pip install future
 
 
 

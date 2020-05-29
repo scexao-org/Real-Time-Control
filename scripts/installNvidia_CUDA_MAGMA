@@ -1,0 +1,124 @@
+#!/bin/bash
+
+echo "Running install script for NVIDIA drivers, CUDA toolkit and MAGMA library"
+echo "Within the NVIDIA installers, check the CACAO wiki for more information."
+
+cd $HOME
+mkdir -p soft
+cd soft
+
+
+#=============================
+# VERSION NUMBERS
+#=============================
+NVIDIA_VERSION="NVIDIA-Linux-x86_64-440.82"
+NVIDIA_URL="http://us.download.nvidia.com/XFree86/Linux-x86_64/440.82/${NVIDIA_VERSION}.run"
+CUDA_VERSION="cuda_10.2.89_440.33.01_linux"
+CUDA_URL="http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_installers/${CUDA_VERSION}.run"
+MAGMA_VERSION="2.5.3"
+#=============================
+
+read -s -p "Blacklist nouveau [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    echo "Blacklisting nouveau..."
+    echo "blacklist nouveau" | sudo tee /etc/modprobe.d/blacklist-nvidia-nouveau.conf
+    echo "options nouveau modeset=0" | sudo tee /etc/modprobe.d/blacklist-nvidia-nouveau.conf
+    sudo update-initramfs -u    
+
+    echo "Now reboot, restart this script and skip this step."
+    exit
+fi
+
+
+read -s -p "Install NVIDIA drivers [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    cd $HOME/soft
+    echo "Downloading the NVIDIA driver..."
+    wget $NVIDIA_VERSION
+    chmod +x ${NVIDIA_VERSION}.run
+    echo "Unpacking..."
+    ./${NVIDIA_VERSION}.run -x
+    cd $NVIDIA_VERSION
+    echo "Installing..."
+    sudo IGNORE_PREEMPT_RT_PRESENCE=1 ./nvidia_installer
+
+    echo "Checking nvidia-smi"
+    nvidia-smi
+fi
+
+
+read -s -p "Install CUDA toolkit [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    cd $HOME/soft
+    echo "Installing gcc/g++/gfortan 8"
+    echo "Assumes the system ships with 9 - otherwise edit before running !"
+    sudo apt install gcc-8 g++-8 gfortran-8 gfortran
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
+    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
+    sudo update-alternatives --install /usr/bin/gfortran f95 /usr/bin/gfortran-9 9
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
+    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
+    sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-8 8
+
+    echo "Switching system to gcc/g++/gfortan 8"
+    sudo update-alternatives --set g++ /usr/bin/g++-8
+    sudo update-alternatives --set gcc /usr/bin/gcc-8
+    sudo update-alternatives --set gfortran /usr/bin/gfortran-8
+
+    echo "Downloading CUDA..."
+    wget $CUDA_URL
+    chmod +x ${CUDA_VERSION}.run
+
+    echo "Installing CUDA..."
+    sudo ./${CUDA_VERSION}.run
+
+    echo "Reverting system to gcc/g++/gfortan 9"
+    sudo update-alternatives --auto g++
+    sudo update-alternatives --auto gcc
+    sudo update-alternatives --auto gfortran
+
+    echo "Amending ~/.profile_scexaoRTC..."
+    echo -e "\n# CUDA toolkit" >> $HOME/.profile_scexaoRTC
+    echo "export CUDA_ROOT=/usr/local/cuda" >> $HOME/.profile_scexaoRTC
+    echo "export PATH=\$CUDA_ROOT/bin:\$PATH" >> $HOME/.profile_scexaoRTC
+    echo "export LD_LIBRARY_PATH=\$CUDA_ROOT/lib64:\$LD_LIBRARY_PATH" >> $HOME/.profile_scexaoRTC
+
+    source $HOME/.profile
+fi
+
+read -s -p "Install MAGMA [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    cd $HOME/soft
+    sudo apt install libccfits-dev libcfitsio-dev libopenblas-base libopenblas-dev liblapack-dev 
+
+    echo "Switching system to gcc/g++/gfortan 8"
+    sudo update-alternatives --set g++ /usr/bin/g++-8
+    sudo update-alternatives --set gcc /usr/bin/gcc-8
+    sudo update-alternatives --set gfortran /usr/bin/gfortran-8
+
+    echo "Downloading MAGMA..."
+    wget icl.utk.edu/projectsfiles/magma/downloads/magma-${MAGMA_VERSION}.tar.gz
+    gunzip magma-${MAGMA_VERSION}.tar.gz
+    tar -xvf magma-${MAGMA_VERSION}.tar
+    cd magma-${MAGMA_VERSION}
+    mkdir build && cd build
+    
+    echo "Compiling and installing MAGMA (great time for coffee break)..."
+    cmake -DGPU_TARGET='sm_75,sm_61,sm_52' ..
+    make -j $(nproc)
+    sudo make install
+
+    echo "Reverting system to gcc/g++/gfortan 9"
+    sudo update-alternatives --auto g++
+    sudo update-alternatives --auto gcc
+    sudo update-alternatives --auto gfortran
+
+    echo "Amending ~/.profile_scexaoRTC..."
+    echo -e "\n# MAGMA" >> $HOME/.profile_scexaoRTC
+    echo "export MAGMA_ROOT=/usr/local/magma" >> $HOME/.profile_scexaoRTC
+    echo "export LD_LIBRARY_PATH=\$MAGMA_ROOT/lib:\$LD_LIBRARY_PATH" >> $HOME/.profile_scexaoRTC
+    echo "export PKG_CONFIG_PATH=\$MAGMA_ROOT/lib/pkgconfig:\$PKG_CONFIG_PATH" >> $HOME/.profile_scexaoRTC
+
+    source $HOME/.profile
+    
+fi
