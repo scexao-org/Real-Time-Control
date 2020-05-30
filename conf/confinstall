@@ -9,14 +9,40 @@ cp ${PWD}/tmux.conf ${HOME}/.tmux.conf
 echo "Installing .profile_scexaoRTC"
 cp ${PWD}/profile ${HOME}/.profile_scexaoRTC
 
+echo "Installing convenient git aliases and git prompt"
+cp -r ${PWD}/bash_git_prompt ${HOME}/bash_git_prompt
+cp ${PWD}/git-completion.bash ${HOME}/git_completion.bash
+. ${PWD}/gitconfig.bash
+
+
+read -p "Amend the sudoers file (forward env. + no password) [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    sudo sed -i s/env_reset/!env_reset/ /etc/sudoers
+    echo “scexao ALL=\(ALL\) NOPASSWD: ALL” | sudo EDITOR=’tee -a’ visudo
+fi
+
+read -p "Misc config tweaks ? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    echo "Increasing RT prio limit"
+    echo "scexao -  rtprio  95" | sudo tee -a /etc/security/limits.conf
+    echo "scexao -  nice  -19" | sudo tee -a /etc/security/limits.conf
+    echo "inotify watches..."
+    echo "fs.inotify.max_user_watches = 524288" | sudo tee -a /etc/sysctl.conf
+    
+    echo "Disabling sleep and hibernation..."
+    sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+    
+    sudo sysctl -p
+fi
+
 
 
 
 echo "Enter old install hard drive letter (X from /dev/sdX)"
 echo "We assume that / part on this disk is part 2 - and possibly /home is part 3."
-read -p "Old install on disk X as in '/dev/sd{X}:' " PART
-
+read -p "Old install on disk X as in '/dev/sd{X}: ' " PART
 if [ $PART ]; then
+
 
     # MOUNT OLD RTC DRIVE
     MPOINT=/mnt/oldRTCroot
@@ -92,10 +118,11 @@ if [ $PART ]; then
     else
         sudo mkdir -p /mnt/oldRTC
         sudo rmdir /mnt/oldRTCroot
+    fi
     # ======================
 fi
 
-read -s -p "Do the contents of conf/fstabadd look OK ? [y/n]" YESNOTMP
+read -p "Do the contents of conf/fstabadd look OK ? [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     # create directories
     echo "Amending fstab and mounting RAIDs"    
@@ -127,4 +154,3 @@ fi
 # gpg --batch -d --passphrase $PASS 50-cloud-init.yaml.gpg > 50-cloud-init.yaml
 # gpg --batch -d --passphrase $PASS fstabadd.gpg > fstabadd
 # fi
-

@@ -13,7 +13,7 @@ echo "Perform the conf installation ?"
 echo "Will install files in conf subfolder, ssh keys, netplan, fstab"
 echo "Requires the old drive plugged in for copying from it"
 echo "If not possible - abort here (Ctrl + C) and work manually through ./conf/confinstall"
-read -s -p "Do it? [y/n]: " YESNOTMP
+read -p "Do it? [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     cd conf
     ./confinstall
@@ -60,7 +60,7 @@ cd ..
 # ==============================================================
 # DM driver
 # ==============================================================
-read -s -p "Compile DM drivers [y/n]: " YESNOTMP
+read -p "Compile DM drivers [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     echo "Compiling BMC DM drivers..."
     cd $HOME
@@ -98,7 +98,7 @@ fi
 # KICK IN A PYTHON INSTALL (/home/scexao/anaconda3)
 # ==============================================================
 
-read -s -p "Install a fresh Anaconda3 ? [y/n]: " YESNOTMP
+read -p "Install a fresh Anaconda3 ? [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     
     echo "Installing Anaconda 3..."
@@ -118,19 +118,28 @@ fi
 
 # Now we need milk and cacao
 ## MILK
-read -s -p "Install MILK ? [y/n]: " YESNOTMP
+read -p "Install MILK ? [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     . $RTCDIR/scripts/milk-install
 fi
 
 ## CACAO
-read -s -p "Install CACAO ? [y/n]: " YESNOTMP
+read -p "Install CACAO ? [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     . $RTCDIR/scripts/cacao-install
 fi
 
+## CACAO - BMC interface
+read -p "Install CACAO/BMC interface ? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    cd $HOME/src
+    git clone https://github.com/cacao-org/DM_BMC.git
+    cd DM_BMC
+    gcc -o runBMCcacao runBMCcacao.c -L../DMoptical/lib/ -L/usr/local/milk/lib -I../DMoptical/src/inc/ -I/usr/local/milk/include/ImageStreamIO -lrt -lbmcmd -lm -lpthread -lImageStreamIO -Wl,-rpath=/usr/local/milk/lib
+fi
+
 ## pyMilk
-read -s -p "Install pyMilk ? [y/n]: " YESNOTMP
+read -p "Install pyMilk ? [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     cd $HOME/src
     git clone https://www.github.com/milk-org/pyMilk.git pyMilk

@@ -32,6 +32,8 @@ sudo ldconfig -v
 
 # Make the tmpfs disk
 echo "Making a tmpfs drive on /milk/shm..."
+
+echo "# MILK TMPFS" | sudo tee -a /etc/fstab
 echo "tmpfs /milk/shm tmpfs rw,nosuid,nodev" | sudo tee -a /etc/fstab
 sudo mkdir -p /milk/shm
 sudo mount /milk/shm

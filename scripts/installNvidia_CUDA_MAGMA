@@ -18,11 +18,11 @@ CUDA_URL="http://developer.download.nvidia.com/compute/cuda/10.2/Prod/local_inst
 MAGMA_VERSION="2.5.3"
 #=============================
 
-read -s -p "Blacklist nouveau [y/n]: " YESNOTMP
+read -p "Blacklist nouveau [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     echo "Blacklisting nouveau..."
     echo "blacklist nouveau" | sudo tee /etc/modprobe.d/blacklist-nvidia-nouveau.conf
-    echo "options nouveau modeset=0" | sudo tee /etc/modprobe.d/blacklist-nvidia-nouveau.conf
+    echo "options nouveau modeset=0" | sudo tee -a /etc/modprobe.d/blacklist-nvidia-nouveau.conf
     sudo update-initramfs -u    
 
     echo "Now reboot, restart this script and skip this step."
@@ -30,7 +30,7 @@ if [ $YESNOTMP = "y" ]; then
 fi
 
 
-read -s -p "Install NVIDIA drivers [y/n]: " YESNOTMP
+read -p "Install NVIDIA drivers [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     cd $HOME/soft
     echo "Downloading the NVIDIA driver..."
@@ -47,7 +47,7 @@ if [ $YESNOTMP = "y" ]; then
 fi
 
 
-read -s -p "Install CUDA toolkit [y/n]: " YESNOTMP
+read -p "Install CUDA toolkit [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     cd $HOME/soft
     echo "Installing gcc/g++/gfortan 8"
@@ -86,7 +86,7 @@ if [ $YESNOTMP = "y" ]; then
     source $HOME/.profile
 fi
 
-read -s -p "Install MAGMA [y/n]: " YESNOTMP
+read -p "Install MAGMA [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     cd $HOME/soft
     sudo apt install libccfits-dev libcfitsio-dev libopenblas-base libopenblas-dev liblapack-dev 
