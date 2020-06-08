@@ -1,5 +1,32 @@
 #!/bin/bash
 
+CSETname="ocamdec"
+
+
+# Get number of cores in CPU set
+
+cpustring=$( cset set -l | grep ${CSETname} | awk '{print $2}' )
+IFS=',' read -r -a array <<< "${cpustring}"
+
+nbCPU=0
+for cpurange in "${array[@]}"
+do
+        IFS='-' read -r -a array1 <<< "${cpurange}"
+        dt=0
+        if [ ${#array1[@]} = 1 ]; then
+                let dt=1
+        fi
+        if [ ${#array1[@]} = 2 ]; then
+                let dt=${array1[1]}-${array1[0]}+1
+        fi
+        let nbCPU+=dt
+done
+
+echo "CPUset $1 has $nbCPU cores"
+
+
+
+
 sudo pkill ocamrundec
 
 cd /home/scexao/AOloop/Pyramid/
@@ -7,7 +34,7 @@ rm ocam2dsliceind.fits &> /dev/null
 
 tmux kill-session -t ocamdecode &> /dev/null
 tmux new-session -d -s ocamdecode
-tmux send-keys -t ocamdecode "OMP_NUM_THREADS=1 cacao -n ocamrundec" C-m
+tmux send-keys -t ocamdecode "OMP_NUM_THREADS=${nbCPU} cacao -n ocamrundec" C-m
 tmux send-keys -t ocamdecode "readshmim ocam2krc" C-m
 tmux send-keys -t ocamdecode "loadfits \"ocam2kpixi.fits\" ocam2kpixi" C-m
 tmux send-keys -t ocamdecode "impixdecodeU ocam2krc 120 120 pixsliceNB.txt ocam2kpixi ocam2d ocam2dsliceind.fits" C-m
@@ -17,10 +44,10 @@ tmux send-keys -t ocamdecode "EOF" C-m
 sleep 2
 pidlist=$( pgrep ocamrundec|xargs echo | sed 's/ /,/g' )
 #echo $pidlist
-sudo chrt -f -p 80 $pidlist
+sudo chrt -f -p 80 ${pidlist}
 
 pidlist=$( pgrep ocamrundec|xargs echo | sed 's/ /,/g' )
-sudo cset proc -m -p $pidlist -t ocamdec > /dev/null
+sudo cset proc -m -p ${pidlist} -t ${CSETname} > /dev/null
 
 
 ln -fs ocam2dsliceind.fits pixstream_wfspixindex.fits

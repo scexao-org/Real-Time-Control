@@ -1,0 +1,25 @@
+#!/bin/bash
+
+cpustring=$( cset set -l | grep $1 | awk '{print $2}' )
+echo "cpustring : ${cpustring}"
+
+IFS=',' read -r -a array <<< "${cpustring}"
+
+
+nbCPU=0
+for cpurange in "${array[@]}"
+do
+	IFS='-' read -r -a array1 <<< "${cpurange}"
+	dt=0
+	if [ ${#array1[@]} = 1 ]; then
+		let dt=1
+	fi
+	if [ ${#array1[@]} = 2 ]; then
+		let dt=${array1[1]}-${array1[0]}+1
+	fi
+	let nbCPU+=dt
+	#printf "%10s  %2d   + %d  %d\n" "${cpurange}" "${#array1[@]}" "${dt}" "${nbCPU}"
+done
+
+echo "CPUset $1 has $nbCPU cores"
+
