@@ -107,7 +107,7 @@ fi
 thisPID=$(echo $$)
 
 sudo cset proc -m ${thisPID} ${CPUset}
-cacao -n $pname << EOF
+OMP_NUM_THREADS=1 cacao -n $pname << EOF
 imnetwreceive $1 1 ${RTprio}
 exit
 EOF
