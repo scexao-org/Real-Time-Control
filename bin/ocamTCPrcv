@@ -1,5 +1,5 @@
 #!/bin/bash
 
 tmux new-session -d -s ocamTCPrcv
-tmux send-keys -t ocamTCPrcv "shmimTCPreceive -p 90 30107" C-m
+tmux send-keys -t ocamTCPrcv "shmimTCPreceive -p 90 -c aol0COM 30107" C-m
 

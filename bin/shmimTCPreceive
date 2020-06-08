@@ -104,11 +104,10 @@ fi
 
 
 
+thisPID=$(echo $$)
 
-
-
+sudo cset proc -m ${thisPID} ${CPUset}
 cacao -n $pname << EOF
-csetpmove ${CPUset}
 imnetwreceive $1 1 ${RTprio}
 exit
 EOF

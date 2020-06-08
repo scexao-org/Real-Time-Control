@@ -69,6 +69,7 @@ if [ $YESNOTMP = "y" ]; then
     rsync -au --progress ${RTCDIR}/progs/DMoptical/* .
 
     #Compile and install:
+    chmod +x compile.sh
     . compile.sh
 
     # content was uncompressed by:

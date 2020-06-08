@@ -16,17 +16,20 @@ import sys
 import numpy as np
 import math as m
 import copy
-from xaosim.scexao_shmlib import shm
+#from xaosim.scexao_shmlib import shm
+from pyMilk.interfacing.isio_shmlib import SHM as shm
+
+MILK_SHM_DIR = os.environ['MILK_SHM_DIR']
 
 home = os.getenv("HOME")
 
 args = sys.argv[1:]
 if args != []:
     if isinstance(int(args[0]),int):
-        shm_im = shm("/tmp/dm00disp%02d.im.shm" % (int(args[0]),))
+        shm_im = shm(MILK_SHM_DIR + "/dm00disp%02d.im.shm" % (int(args[0]),))
         os.system("scexaostatusext \"dmoffload 'CLOSED chn %02d' 1\""% (int(args[0]),))
 else:
-    shm_im = shm("/tmp/dm00disp.im.shm")
+    shm_im = shm(MILK_SHM_DIR + "/dm00disp.im.shm")
     os.system("scexaostatusext \"dmoffload 'CLOSED chn 12' 1\"")
 
 os.system("dologext \"DM offload: starting procedure\"")

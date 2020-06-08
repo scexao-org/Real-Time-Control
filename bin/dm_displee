@@ -79,7 +79,8 @@ mycmap = cm.gray
 # -----------------------
 #   set up the window
 # -----------------------
-pygame.init()
+pygame.display.init()
+pygame.font.init()
 
 FPS = 20                        # frames per second setting
 fpsClock = pygame.time.Clock()  # start the pygame clock!

@@ -110,8 +110,8 @@ static struct pci_driver mdrv_driver = {
 	.probe			= mdrv_probe,
 	.remove			= mdrv_remove,
 	.suspend		= NULL,
-	.suspend_late	= NULL,
-	.resume_early	= NULL,
+	//.suspend_late	= NULL,
+	//.resume_early	= NULL,
 	.resume			= NULL,
 	.shutdown		= NULL
 	};
