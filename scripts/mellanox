@@ -2,7 +2,7 @@ cd $HOME/soft
 
 wget https://www.mellanox.com/downloads/MFT/mft-4.14.4-6-x86_64-deb.tgz
 tar xzvf mft-4.14.4-6-x86_64-deb.tgz
-cd mft-4.14.4-6-x86_64-deb.tgz
+cd mft-4.14.4-6-x86_64-deb
 
 sudo apt install dkms
 sudo ./install.sh

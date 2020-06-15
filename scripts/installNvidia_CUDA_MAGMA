@@ -34,13 +34,13 @@ read -p "Install NVIDIA drivers [y/n]: " YESNOTMP
 if [ $YESNOTMP = "y" ]; then
     cd $HOME/soft
     echo "Downloading the NVIDIA driver..."
-    wget $NVIDIA_VERSION
+    wget $NVIDIA_URL
     chmod +x ${NVIDIA_VERSION}.run
     echo "Unpacking..."
     ./${NVIDIA_VERSION}.run -x
     cd $NVIDIA_VERSION
     echo "Installing..."
-    sudo IGNORE_PREEMPT_RT_PRESENCE=1 ./nvidia_installer
+    sudo IGNORE_PREEMPT_RT_PRESENCE=1 ./nvidia-installer
 
     echo "Checking nvidia-smi"
     nvidia-smi
@@ -55,7 +55,7 @@ if [ $YESNOTMP = "y" ]; then
     sudo apt install gcc-8 g++-8 gfortran-8 gfortran
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
-    sudo update-alternatives --install /usr/bin/gfortran f95 /usr/bin/gfortran-9 9
+    sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 9
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 8
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-8 8
     sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-8 8

@@ -3,6 +3,7 @@
 sudo apt-get install -y cmake flex bison pkg-config
 sudo apt-get install -y libcfitsio-dev libreadline-dev libfftw3-dev libgsl-dev libncurses5-dev 
 
+mkdir -p $HOME/src
 cd $HOME/src
 git clone --recursive https://www.github.com/milk-org/milk-package.git milk
 cd milk
@@ -25,7 +26,7 @@ echo "export MILK_INSTALLDIR=/usr/local/milk" >> $HOME/.profile_scexaoRTC
 echo "export PATH=\$PATH:\$MILK_INSTALLDIR/bin" >> $HOME/.profile_scexaoRTC
 echo "export PKG_CONFIG_PATH=\$PKG_CONFIG_PATH:\$MILK_INSTALLDIR/lib/pkgconfig" >> $HOME/.profile_scexaoRTC
 source $HOME/.profile
-
+    
 echo "/usr/local/magma/lib" > magma.conf
 sudo mv magma.conf /etc/ld.so.conf.d/
 sudo ldconfig -v

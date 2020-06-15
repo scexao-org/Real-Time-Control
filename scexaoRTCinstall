@@ -22,7 +22,7 @@ if [ $YESNOTMP = "y" ]; then
 fi
 
 echo "Symlinking Real-Time-Control/bin to ~/bin and adding to PATH..."
-ln -s Real-Time-Control/bin /home/scexao/bin
+ln -s $HOME/Real-Time-Control/bin $HOME/bin
 echo -e "\n# General RTC binaries" >> $HOME/.profile_scexaoRTC
 echo "export PATH=\$PATH:/usr/local/bin:/home/scexao/bin" >> $HOME/.profile_scexaoRTC
 
@@ -113,6 +113,16 @@ if [ $YESNOTMP = "y" ]; then
 
 fi
 
+# ==============================================================
+# CONFIGURE GPU 
+# ==============================================================
+
+# Now we need nvidia/CUDA/Magma
+## MILK
+read -p "Start the nvidia/cuda/magma script ? [y/n]: " YESNOTMP
+if [ $YESNOTMP = "y" ]; then
+    . $RTCDIR/scripts/installNvidia_CUDA_MAGMA
+fi
 # ==============================================================
 # CONFIGURE CACAO 
 # ==============================================================
