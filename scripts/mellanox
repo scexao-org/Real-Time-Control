@@ -1,0 +1,14 @@
+cd $HOME/soft
+
+wget https://www.mellanox.com/downloads/MFT/mft-4.14.4-6-x86_64-deb.tgz
+tar xzvf mft-4.14.4-6-x86_64-deb.tgz
+cd mft-4.14.4-6-x86_64-deb.tgz
+
+sudo apt install dkms
+sudo ./install.sh
+
+
+sudo mst start
+sudo mlxconfig -d /dev/mst/mt4119_pciconf0 q | grep LINK_TYPE
+sudo mlxconfig -d /dev/mst/mt4119_pciconf0 set LINK_TYPE_P1=2 LINK_TYPE_P2=2
+sudo mlxconfig -d /dev/mst/mt4119_pciconf0 q | grep LINK_TYPE

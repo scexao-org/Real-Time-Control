@@ -1,0 +1,19 @@
+#!/bin/bash
+
+today="$(date -u +%F)"
+starttoday="$(date -d $today +%s)"
+#echo ${starttoday}
+
+
+
+grep AVEFLUX /milk/shm/aol0perf.log > log.AVEFLUX.dat
+grep " OL_AVE_RMS" /milk/shm/aol0perf.log > log.CORR_RATIO.dat
+
+gnuplot << EOF
+set term png size 1024,768
+set out "plot.png"
+set xlabel "UT hr"
+set ylabel "Flux"
+plot [][0:1000] "log.AVEFLUX.dat" u ((\$1-${starttoday})/3600):(\$4) title "WFS flux" w l, "log.CORR_RATIO.dat" u ((\$1-${starttoday})/3600):(\$4*2) title "post-AO188 WF error (nm)" w d
+exit
+EOF
