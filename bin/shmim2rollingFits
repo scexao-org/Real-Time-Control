@@ -1,0 +1,66 @@
+#!/bin/bash
+
+progname=`basename "$0"`
+tmuxname="${progname}-$1"
+pname=${tmuxname}
+
+function cleanup {
+	echo "Clean exit"
+	tmux send-keys -t ${tmuxname} "exitCLI" C-m
+}
+
+trap cleanup EXIT
+
+
+
+EXPECTED_ARGS=3
+
+if [ $# -ne $EXPECTED_ARGS ]
+then
+	echo
+	echo "---------- write SHM to rolling FITS file ----------- "
+	echo "runs as a simple loop"
+	echo ""
+	echo " Usage:  $0 <shm stream> <output folder> <polling delay [sec]>"
+	echo
+	exit
+fi
+
+# Add trailing /
+SAVE_PATH=$2
+[[ "${SAVE_PATH}" != */ ]] && SAVE_PATH="${SAVE_PATH}/"
+
+echo "Saving stream $1 to rolling FITS files in ${SAVE_PATH} every $3 msec"
+echo "Uses a milk running inside tmux session ${tmuxname}"
+echo "Press [CTRL + C] to stop."
+
+tmux new-session -d -s ${tmuxname}
+sleep 3
+
+tmux send-keys -t ${tmuxname} "milk -n ${pname}" C-m
+tmux send-keys -t ${tmuxname} "readshmim $1" C-m
+
+IMCNT=0
+TMP_FILE=${SAVE_PATH}$1_tmp_copy.fits
+
+while :
+do
+	if ! (( ${IMCNT} % 50 )) ; then
+		echo "saving count ${IMCNT}"
+	fi
+	tmux send-keys -t ${tmuxname} "savefits $1 \"${TMP_FILE}\"" C-m
+
+	NEW_FILE=${SAVE_PATH}$1_${IMCNT}.fits
+	mv $TMP_FILE $NEW_FILE
+
+
+	# Flush older files
+	let CNT_OLD=IMCNT-50
+	OLD_FILE=${SAVE_PATH}$1_${CNT_OLD}.fits
+	if [ -f "${OLD_FILE}" ]; then
+		rm ${OLD_FILE}
+	fi
+	
+	let IMCNT=IMCNT+1
+	sleep $3
+done

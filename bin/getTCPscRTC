@@ -1,0 +1,233 @@
+#!/bin/bash
+
+
+# number of arguments to script
+NBARGS=2
+
+
+
+
+
+# ======================= PROCESS NAME =================================
+pname=`echo "$0" | sed "s/\.\///g"`
+
+
+
+
+function printHELP {
+echo "------------------------------------------------------------------------"
+echo "$(tput bold) $pname : GET STREAM FROM AO188 RTS $(tput sgr0)"
+echo "------------------------------------------------------------------------"
+echo "  Open TCP socket, transfers stream from AO188 RTS to scexao"
+echo "   "
+echo " $(tput bold)USAGE:$(tput sgr0)"
+echo "     $0 [-hc] <stream> <port>"
+echo ""
+echo " $(tput bold)OPTIONS:$(tput sgr0)"
+echo "     $(tput bold)-h$(tput sgr0)            help"
+echo "     $(tput bold)-c$(tput sgr0)            Force use of counter for synchronization"
+echo "     $(tput bold)-k$(tput sgr0)            kill previous connection"
+echo "     $(tput bold)-s$(tput sgr0) <CPUset>   use CPU set (local)"
+echo "     $(tput bold)-r$(tput sgr0) <CPUset>   use CPU set (remote)"
+echo ""
+echo " $(tput bold)INPUT:$(tput sgr0)"
+echo "     <stream>     stream name"
+echo "     <port>       port number"
+echo ""
+echo " $(tput bold)DETAILS:$(tput sgr0)"
+echo "  Opens listening port on local host, and runs TCP transmit on remote host"
+echo ""
+echo " $(tput bold)TROUBLESHOOTING:$(tput sgr0)"
+echo " Check that remote shm file exists"
+echo " Check that port is not already in use:"
+echo "  > sudo netstat -nt --program | grep <port>"
+echo "  > sudo kill <PID>"
+echo " "
+echo "------------------------------------------------------------------------"
+}
+
+
+printHELP1 ()
+{
+    printf "%20s       Get stream from AO188 to scexao\n" "$0" 
+}
+
+
+
+EXITSTATUS=0
+
+
+
+function cmdexists()
+{
+  command -v "$1" >/dev/null 2>&1
+}
+
+
+
+function checkCommand {
+if cmdexists $1; then
+    echo "[$(tput setaf 2)$(tput bold)   OK   $(tput sgr0)] Command $(tput bold)$1$(tput sgr0) found"
+else
+    echo "[$(tput setaf 1)$(tput bold) FAILED $(tput sgr0)] Command $(tput bold)$1$(tput sgr0) not installed.  Aborting."; EXITSTATUS=1;
+fi
+
+}
+
+
+
+
+
+
+# Transform long options to short ones
+singlelinehelp=0
+for arg in "$@"; do
+  shift
+  case "$arg" in
+    "--help") set -- "$@" "-h" ;;
+    "--help1") 
+set -- "$@" "-h" 
+singlelinehelp=1;
+;;
+    *)        set -- "$@" "$arg"
+  esac
+done
+
+
+
+SYNCMODE="0"
+KILLCONN="1"
+RESTARTCONN="1"
+CPUSETFLAG="0"
+CPUSETrFLAG="0"
+
+while getopts :hcks:r: FLAG; do
+  case $FLAG in
+    h)  #show help
+      if [ "$singlelinehelp" -eq "0" ]; then
+      printHELP
+      else
+      printHELP1
+      fi
+      exit
+      ;;
+    c) 
+    echo "Force synchronization by counter"
+    SYNCMODE="1"
+    ;;
+    k)
+    RESTARTCONN="0"
+    ;;
+    s)
+    CPUSETFLAG="1"
+    CPUset="$OPTARG"
+    ;;    
+    r)
+    CPUSETrFLAG="1"
+    CPUrset="$OPTARG"
+    ;;    
+    \?) 
+      echo -e \\n"Option -${BOLD}$OPTARG${NORM} not allowed."
+      printHELP
+      ;;
+  esac
+done
+
+shift $((OPTIND-1))  
+
+
+
+
+
+
+
+
+if [ "$1" = "help" ] || [ "$#" -ne $NBARGS ]; then
+if [ "$#" -ne $NBARGS ]; then
+    echo "$(tput setaf 1)$(tput bold) Illegal number of parameters ($NBARGS params required, $# entered) $(tput sgr0)"
+fi
+printHELP
+        exit
+fi
+
+
+
+
+# ============================= CHECK IF COMMAND EXISTS ==========================
+
+checkCommand tmux
+checkCommand cacao 
+
+
+
+if [ $EXITSTATUS -eq 1 ]; then
+echo ""
+echo "$(tput setaf 1)$(tput bold) REQUIRED FILES, COMMANDS NOT FOUND: EXITING $(tput sgr0)"
+echo ""
+exit
+else
+echo ""
+fi
+
+
+
+
+# ================= RECEIVE @ scexao ========================
+tmuxname="streamTCPreceive_$2"
+cmd="shmimTCPreceive"
+
+if [ "$CPUSETFLAG" = "1" ]; then
+cmd="$cmd -c ${CPUset}"
+fi
+
+if [ "$CPUSETrFLAG" = "1" ]; then
+csetrstring="-s ${CPUrset}"
+else
+csetrstring=" "
+fi
+
+
+
+
+if [ "$KILLCONN" = "1" ]; then
+tmux send-keys -t ${tmuxname} C-c
+tmux send-keys -t ${tmuxname} C-c
+tmux send-keys -t ${tmuxname} "exit" C-m
+tmux kill-session -t ${tmuxname}
+fi
+
+if [ "$RESTARTCONN" = "1" ]; then
+tmux new-session -d -s ${tmuxname}
+tmux send-keys -t ${tmuxname} "" C-m
+
+tmux send-keys -t ${tmuxname} "$cmd $2" C-m
+
+sleep 1
+fi
+
+
+sleep 1
+echo "SEND PROCESS"
+
+# ================= SEND @ SCRTC ===========================
+
+SC_RTC=133.40.161.194
+TAR_IP=10.20.70.2
+
+if [ "$RESTARTCONN" = "1" ]; then
+	if [ "$SYNCMODE" -eq "0" ]; then
+	echo "[1] COMMAND : LD_LIBRARY_PATH=/usr/local/lib \$HOME/bin/shmimTCPtransmit ${csetrstring} $1 ${TAR_IP} $2"
+	ssh scexao@${SC_RTC} "LD_LIBRARY_PATH=/usr/local/lib \$HOME/bin/shmimTCPtransmit ${csetrstring} $1 ${TAR_IP} $2"
+	else
+	echo "[2] COMMAND : LD_LIBRARY_PATH=/usr/local/lib \$HOME/bin/shmimTCPtransmit ${csetrstring} -c $1 ${TAR_IP} $2"
+	ssh scexao@${SC_RTC} "LD_LIBRARY_PATH=/usr/local/lib \$HOME/bin/shmimTCPtransmit ${csetrstring} -c $1 ${TAR_IP} $2"
+	fi
+else
+	echo "[3] COMMAND : LD_LIBRARY_PATH=/usr/local/lib \$HOME/bin/shmimTCPtransmit -k $1 ${TAR_IP} $2"
+	ssh scexao@${SC_RTC} "LD_LIBRARY_PATH=/usr/local/lib \$HOME/bin/shmimTCPtransmit -k $1 ${TAR_IP} $2"
+fi
+
+
+
+
+
