@@ -1,0 +1,47 @@
+
+  * Copied all needed includes into this directory to quickly overcome 
+    the inability to find the proper include files
+
+  * Added 'irqreturn.h' which could not be found anywhere and added it as
+    an include near the top of the program.
+
+  * Line 154 - Changed 2 %x to %p and removed the prefacing (int) typecasts
+               to remove a 'pointer to integer' warning.
+
+  * Line 183 - Changed a (UINT32) to an (unsigned long) to remove a pointer
+               conversion warning.
+
+  * Line 185 - Changed 1 %x %p and removed the prefacing (int) typecast
+               to remove a 'pointer to integer' warning.
+
+  * Line 401 - 'remap_page_range' undefined. Turns out that this call has
+               been depreciated and replaced with 'remap_pfn_range'.  I also
+               added '>>PAGE_SHIFT' to the 'physical' parameter to conform 
+               with the differences between these two routines.
+
+  * Line 403 - Modified print statement to reflect remap_pfn_range
+
+  * Line 684 - Undefined 'free_irq' call. Included 3 new include files near
+               the top:
+               #include "linux/sched.h"
+               #include "linux/signal.h"
+               #include "/usr/src/linux-2.6.22.19-0.4/include/linux/interrupt.h"
+
+  * Line 729 - deprecated_irq_flag warning. Replaced SA_SHIRQ with IRQF_SHARED
+               In line 1894 I commented out the 3rd parameter of the function
+               dpio2_kernel_interrupt_handler.
+
+
+  * Line 958 - Changed a (UINT32) to an (unsigned long) to remove a pointer
+               to remove a 'pointer to integer' warning.
+
+  * Line 1189- Changed pci_find_device to pci_get_device (no parameters change)
+
+  * Line 1532- Changed pci_find_device to pci_get_device (no parameters change)
+
+  * Line 1578- Changed pci_find_device to pci_get_device (no parameters change)
+
+  * Line 1629- Changed pci_find_device to pci_get_device (no parameters change)
+
+  * Line 1710- Changed pci_find_class to pci_get_class (no parameters change)
+

@@ -1,0 +1,42 @@
+What thread_code does
+
+thread_code performs two major tasks.  First, the dpio2 device for output.
+Second, it allocates the buffers from which data is transferred.
+
+open the dpio2 device
+
+Note that thread_code opens a single device (devno_out = 1).
+
+The first step is to call openDpio2ForOutput, which is in dpio2funcs.cpp.
+
+All this routine does is call dpio2Open in dpio2Vmosa.cpp.
+
+The first thing this function does is to call dpio2_open (I'm not making
+this up!) in dpio2-linux-user-space.c.  Note that the return from dpio2_open
+is HANDLE, which is a pointer to an instance of the structure dpio2_handle_t
+(see dpio2-linux-user-space.h).
+
+dpio2_open does several things:
+
+    - dynamically allocates memory for a HANDLE structure named handle
+
+    - opens the dpio2 device
+
+    - puts information into the handle structure (correctly, I think)
+
+On return to dpio2Open, dpio2Open has the address of the allocated and initialized
+handle structure (l 394, dpio2Vmosa).  From here on, it's a mystery, but all the
+pointers seem to be handled correctly.
+
+So now let's get to the real issue - the buffer allocation code.
+
+It seems so simple - thread_code calls allocBuffers (in thread.c); the input is
+the size of the buffer, the output is 'status'.
+
+The process involves several structures and arrays:
+
+    - pBuffer[]                   array of pointers to the buffers
+
+    - DPIO2_DMA dmaInfo_out[]     buffer data; defined in dpio2.h
+
+    - pPageInfo_out[]             array of pointers to the dmaInfo_out[] structures

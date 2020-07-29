@@ -1,0 +1,10 @@
+#gcc -fno-builtin -fstrength-reduce -fPIE -Wall -Wno-long-long -pthread -D CPU=I386  -D VMOSA -D VM_LINUX -I/home/scexao/Real-Time-Control/progs/DMcopper/DMcontrol/rh-test-src/../dpio2-drv-src-x86-linux/include -o dm_trigger.o -c dm_trigger.c
+
+# make clean
+
+make
+
+gcc -D CPU=I386  -D VMOSA -D VM_LINUX -c runBMCcacao_VMETRO.c -o runBMCcacao_VMETRO.o -L/usr/local/milk/lib -I/usr/local/milk/include -I/usr/local/milk/include/ImageStreamIO -I/home/scexao/Real-Time-Control/progs/DMcopper/DMcontrol/rh-test-src/../dpio2-drv-src-x86-linux/include -lrt -lbmcmd -lm -lpthread -lImageStreamIO -Wl,-rpath=/usr/local/milk/lib
+
+
+g++ -pthread -lrt -o runBMCcacao_VMETRO /home/scexao/Real-Time-Control/progs/DMcopper/DMcontrol/rh-test-src/../dpio2-drv-src-x86-linux/lib/x86-linux-5.4.x/dpio2-drv.o -L/usr/local/milk/lib runBMCcacao_VMETRO.o dpio2funcs.o thread.o util.o -lImageStreamIO

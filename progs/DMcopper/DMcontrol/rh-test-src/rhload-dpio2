@@ -1,0 +1,63 @@
+#!/bin/sh
+
+module="dpio2-linux-kernel-module"
+device="dpio2"
+mode="664"
+group="vmetro"
+
+
+echo
+echo Install DPIO2 Device Driver Kernel Module
+
+
+# Instal kernel module
+echo insmod $module.ko
+/sbin/insmod ./$module.ko || exit 1
+
+# Get major number from cat /proc/devices
+major=`cat /proc/devices | awk "\\$2==\"$device\" {print \\$1}"`
+
+echo major = $major
+
+# If not, remove old dpio2 instances from /dev
+rm -f /dev/${device}/manager
+rm -f /dev/${device}/1
+rm -f /dev/${device}/2
+rm -f /dev/${device}/3
+rm -rf /dev/${device}
+
+# Create dpio2 directory in /dev
+mkdir /dev/${device}
+
+echo mknod /dev/dpio2/manager
+echo mknod /dev/dpio2/1
+echo mknod /dev/dpio2/2
+echo mknod /dev/dpio2/3
+
+# Connect /dev/dpio2/... to major and minor device number
+mknod /dev/${device}/manager c $major 0
+mknod /dev/${device}/1 c $major 1
+mknod /dev/${device}/2 c $major 2
+mknod /dev/${device}/3 c $major 3
+
+# Set group
+#chgrp $group /dev/${device}/manager
+#chgrp $group /dev/${device}/1
+#chgrp $group /dev/${device}/2
+#chgrp $group /dev/${device}/3
+
+# Set user rights
+chmod $mode /dev/${device}/manager
+chmod $mode /dev/${device}/1
+chmod $mode /dev/${device}/2
+chmod $mode /dev/${device}/3
+
+# Set non-sudo access
+mode="o+rw"
+chmod $mode /dev/${device}/manager
+chmod $mode /dev/${device}/1
+chmod $mode /dev/${device}/2
+chmod $mode /dev/${device}/3
+
+echo
+

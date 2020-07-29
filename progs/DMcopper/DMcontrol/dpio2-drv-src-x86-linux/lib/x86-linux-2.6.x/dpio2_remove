@@ -1,0 +1,26 @@
+#!/bin/sh
+
+module="dpio2-linux-kernel-module"
+device="dpio2"
+
+echo
+echo Remove DPIO2 Device Driver Kernel Module
+
+
+# Remove kernel module
+echo rmmod $module
+/sbin/rmmod $module || exit 1
+
+echo rm /dev/${device}/manager
+echo rm /dev/${device}/1
+echo rm /dev/${device}/2
+echo rm /dev/${device}/3
+
+# Remove dpio2 from /dev
+rm -f /dev/${device}/manager
+rm -f /dev/${device}/1
+rm -f /dev/${device}/2
+rm -f /dev/${device}/3
+rm -rf /dev/${device}
+
+echo

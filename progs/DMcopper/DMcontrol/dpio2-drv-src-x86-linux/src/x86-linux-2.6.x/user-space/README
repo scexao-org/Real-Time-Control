@@ -1,0 +1,48 @@
+
+In file "dpio2-linux-user-space.c"
+
+  * Line  25- Changed "asm/signal.h" to <signal.h> to avoid timespec redefines
+
+  * Line 292- Changed (int) to (unsigned long) to avoid pointer warning
+
+  * Line 326- Changed (int) to (unsigned long) to avoid pointer warning
+
+  * Line 622- Removed "-ansi" flag from Makefile to avoid warning at line 622
+
+In file "../../../include/CDpio2Oscillator.h"
+
+  * Lines 126-142- Removed "CDpio2OscillatorCY22150::" before each definition
+                   go get rid of "Extra Qualification On Member" errors
+
+In file "../../../include/vmosaCDpio2HwInterface.h"
+
+  * Line 315-323: Changed UINT32 to unsigned long
+    Line 106:     Changed class definition to match unsigned long
+
+  * Line 329-337: Changed UINT32 to unsigned long
+    Line 107:     Changed class definition to match unsigned long
+
+  * Line 343-351: Changed UINT32 to unsigned long
+    Line 108:     Changed class definition to match unsigned long
+
+In file "../../../src/driver/dpio2Vmosa.cpp"
+
+  * Line 783:     Changed 2 %x to %p and removed (int)s
+
+  * Line 885:     Changed 2 %x to %p and removed (int)s
+
+In file "../../../src/flash/CDpio2Flash.cpp"
+
+  * Line 885:     Took a constant string and made it a global
+
+  * Line 962:     Took a constant string and made it a global
+
+In file "../../../src/flash/FlashLoaderForVmosa.cpp"
+
+  * Line 209:     Added (unsigned long) after (int) to remove precision error
+
+In file "../../../src/flash/SrecToBin.c"
+
+  * Line 117:     Changed UINT32s to unsigned long
+
+  * Line 146:     Changed UINT32 to unsigned long

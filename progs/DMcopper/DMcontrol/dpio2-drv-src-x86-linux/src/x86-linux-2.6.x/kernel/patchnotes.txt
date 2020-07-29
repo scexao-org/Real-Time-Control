@@ -1,0 +1,56 @@
+# patch notes
+
+
+all changes preceeded by
+// PATCH FOR NEW KERNEL
+
+
+==============================================================
+
+./arch/x86/include/asm/uaccess.h:31:9: error: dereferencing pointer to incomplete type ‘struct task_struct’
+   31 |  current->thread.addr_limit = fs;
+      |         ^~
+
+# changing asm/uaccess.h to linux/uaccess.h
+
+grep "asm/uaccess.h" *
+dpio2-linux-kernel-module.c:#include "asm/uaccess.h"   /* copy_from/to_user, .. */
+
+
+
+
+
+
+==============================================================
+
+
+  CC [M]  /home/scexao/Real-Time-Control/progs/DMcopper/DMcontrol/dpio2-drv-src-x86-linux/src/x86-linux-2.6.x/kernel/dpio2-linux-kernel-module.o
+/home/scexao/Real-Time-Control/progs/DMcopper/DMcontrol/dpio2-drv-src-x86-linux/src/x86-linux-2.6.x/kernel/dpio2-linux-kernel-module.c:116:5: error: ‘struct file_operations’ has no member named ‘ioctl’
+
+https://stackoverflow.com/questions/23708661/how-to-call-compat-ioctl-or-unlocked-ioctl/23710544
+
+changing ioctl: to unlocked_ioctl:
+changing dpio2_ioctl to remove inode entry
+
+
+
+
+==============================================================
+
+implicit declaration of function ‘page_cache_release’
+
+
+change to put_page()
+
+
+
+==============================================================
+
+Added to makefile
+
+EXTRA_CFLAGS += -Wno-error=date-time
+
+cp $(MODULE_NAME).ko ../../../../rh-test-src/
+
+
+
