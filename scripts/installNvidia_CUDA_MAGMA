@@ -52,7 +52,7 @@ if [ $YESNOTMP = "y" ]; then
     cd $HOME/soft
     echo "Installing gcc/g++/gfortan 8"
     echo "Assumes the system ships with 9 - otherwise edit before running !"
-    sudo apt install gcc-8 g++-8 gfortran-8 gfortran
+    sudo apt install gcc-8 g++-8 gfortran-8 gfortran-9
     sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 9
     sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
     sudo update-alternatives --install /usr/bin/gfortran gfortran /usr/bin/gfortran-9 9
