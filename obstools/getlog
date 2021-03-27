@@ -14,7 +14,7 @@ echo "Pulling logs for directory $dir"
 mkdir -p ${dir}/logdir/
 cp ~/AOloop/AOloop0/logdir/${dir}/logging/* ./${dir}/logdir/
 
-
+rsync -au --progress scexao@scexao2:/media/data/${dir}/logging/* ./${dir}/logdir/
 
 else
   echo "Directory ${dir} does not exist"
