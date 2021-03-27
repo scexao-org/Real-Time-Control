@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Run this script in the telemetry directory
+# 
+
+for dir in 20*
+do
+
+  
+if [ -d $dir ]; then
+
+# Get RTC log from AOloop0 directory
+echo "Pulling logs for directory $dir"
+mkdir -p ${dir}/logdir/
+cp ~/AOloop/AOloop0/logdir/${dir}/logging/* ./${dir}/logdir/
+
+
+
+else
+  echo "Directory ${dir} does not exist"
+fi
+
+done
+
