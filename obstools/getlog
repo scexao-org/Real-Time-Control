@@ -14,7 +14,7 @@ DYstring=${dir:6:2}
 if [ -d $dir ]; then
 
 # Get RTC log from AOloop0 directory
-echo "Pulling logs for directory $dir"
+echo "Pulling logs for directory $dir   --- ${YRstring}  ${MOstring}  ${DYstring}"
 mkdir -p ${dir}/logdir/
 cp ~/AOloop/AOloop0/logdir/${dir}/logging/* ./${dir}/logdir/
 
