@@ -3,7 +3,7 @@
 # Run this script in the telemetry directory
 # 
 
-for dir in 202010*
+for dir in 20*
 do
 
 YRstring=${dir:0:4}
@@ -25,17 +25,17 @@ rsync -au --progress scexao@scexao2:/media/data/${dir}/logging/* ./${dir}/logdir
 # Get DIMM seeing measurement
 wget http://mkwc.ifa.hawaii.edu/current/seeing/dimm/${dir}.dimm.dat -O tmp.dat
 awk '{printf("%s %02d:%02d:%02d MKODIMMseeing %s\n", "'$UTdatestring'", ($4+10)%24,$5,$6,$7)}' tmp.dat > seeing.dimm.dat
-mv seeing.dimm.dat ./${dir}/logdir/${dir}.seeing.dimm.dat
+mv seeing.dimm.dat ./${dir}/logdir/${dir}.seeing.dimm.log
 
 # Get MASS seeing measurement
 wget http://mkwc.ifa.hawaii.edu/current/seeing/mass/${dir}.mass.dat -O tmp.dat
 awk '{printf("%s %02d:%02d:%02d MKOMASSseeing %s\n", "'$UTdatestring'", ($4+10)%24,$5,$6,$7)}' tmp.dat > seeing.mass.dat
-mv seeing.mass.dat ./${dir}/logdir/${dir}.seeing.mass.dat
+mv seeing.mass.dat ./${dir}/logdir/${dir}.seeing.mass.log
 
 # Get MASS profile measurement
 wget http://mkwc.ifa.hawaii.edu/current/seeing/masspro/${dir}.masspro.dat -O tmp.dat
 awk '{printf("%s %02d:%02d:%02d MKOMASSseeing %s %s %s %s %s %s %s\n", "'$UTdatestring'", ($4+10)%24,$5,$6, $7,$8,$9,$10,$11,$12,$13)}' tmp.dat > seeing.masspro.dat
-mv seeing.masspro.dat ./${dir}/logdir/${dir}.seeing.masspro.dat
+mv seeing.masspro.dat ./${dir}/logdir/${dir}.seeing.masspro.log
 
 
 
