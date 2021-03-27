@@ -3,10 +3,14 @@
 # Run this script in the telemetry directory
 # 
 
-for dir in 2020*
+for dir in 202010*
 do
 
-  
+YRstring=${dir:0:4}
+MOstring=${dir:4:2}
+DYstring=${dir:6:2}
+
+
 if [ -d $dir ]; then
 
 # Get RTC log from AOloop0 directory
@@ -19,7 +23,7 @@ rsync -au --progress scexao@scexao2:/media/data/${dir}/logging/* ./${dir}/logdir
 
 # Get DIMM seeing measurement
 wget http://mkwc.ifa.hawaii.edu/current/seeing/dimm/${dir}.dimm.dat -O tmp.dat
-awk '{printf("%02d:%02d:%02d MKDIMMseeing %s\n",($4+10)%24,$5,$6,$7)}' tmp.dat > seeing.dimm.dat
+awk '{printf("${YRstring}/${MOstring}/${DYstring} %02d:%02d:%02d MKDIMMseeing %s\n",($4+10)%24,$5,$6,$7)}' tmp.dat > seeing.dimm.dat
 mv seeing.dimm.dat ./${dir}/logdir/${dir}.seeing.dimm.dat
 
 else
