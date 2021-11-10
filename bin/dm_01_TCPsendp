@@ -1,0 +1,23 @@
+#! /bin/bash
+
+AO188_IP="10.20.90.2"
+
+
+cmd="/home/scexao/bin/shmimTCPtransmit"
+
+
+$cmd dm01disp00 $AO188_IP 30210
+$cmd dm01disp01 $AO188_IP 30211
+$cmd dm01disp02 $AO188_IP 30212
+$cmd dm01disp03 $AO188_IP 30213
+$cmd dm01disp04 $AO188_IP 30214
+$cmd dm01disp05 $AO188_IP 30215
+$cmd dm01disp06 $AO188_IP 30216
+$cmd dm01disp07 $AO188_IP 30217
+$cmd dm01disp08 $AO188_IP 30218
+$cmd dm01disp09 $AO188_IP 30219
+$cmd dm01disp10 $AO188_IP 30220
+$cmd dm01disp11 $AO188_IP 30221
+
+
+

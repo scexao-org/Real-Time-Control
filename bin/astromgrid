@@ -50,6 +50,8 @@ echo "          mode = 9    Xdiag -> OFF ->     sep = CPAm * 2*sqrt(2)/b"
 echo "          mode = 10   Ydiag -> OFF ->     sep = CPAm * 2*sqrt(2)/b"
 echo "          mode = 11   Xdiag -> Ydiag ->   sep = CPAm * 2*sqrt(2)/b"
 echo ""
+echo "          mode = 99   custom - read from shared mem stream gridc, gridc_000, gridc_001 ..."
+echo ""
 echo "     $(tput bold)-S$(tput sgr0) <stream>  SYNCHRO mode (default OFF)."
 echo "                  Switches between grid modes A and B based on stream updates"
 echo "     $(tput bold)-A$(tput sgr0) <mode>      SYNC grid mode A (default=3)"
@@ -327,6 +329,12 @@ GEOMname="Xdiag-Ydiag"
 sep=$( echo "$CPAm $AstroGridBin" | awk '{printf "%.2f \n", sqrt(2.0)/2.0*$1/$2}' )
 fi
 
+if [ "$AstroGridMode" = "99" ]; then
+GEOMname="custom"
+sep="0.00"
+fi
+
+
 echo "CPAm          = $CPAm"
 echo "AstroGridBin  = $AstroGridBin"
 echo "sep           = $sep"
@@ -334,82 +342,94 @@ echo "sep           = $sep"
 
 
 if [ "$SYNCHRO" = "ON" ]; then
-echo "SYNCHRO is ON"
-echo "Grid patterns : $AGridModeA $AGridModeB"
-echo "SYNC offset = $SYNCoffset us"
+  echo "SYNCHRO is ON"
+  echo "Grid patterns : $AGridModeA $AGridModeB"
+  echo "SYNC offset = $SYNCoffset us"
 fi
 
 
 
 if [ "$STOPAG" = "0" ]; then
 
-/home/scexao/bin/dologext "ASTROGID ON  amp = $1 um  speed = $2 Hz  15.5 l/d diag" &
-/home/scexao/bin/scexaostatusext "grid_st ${GEOMname} 0" &
-/home/scexao/bin/scexaostatusext "grid_amp $1" &
-/home/scexao/bin/scexaostatusext "grid_mod $2" &
-/home/scexao/bin/scexaostatusext "grid_sep $sep" &
+  # log information
+  /home/scexao/bin/dologext "ASTROGID ON  amp = $1 um  speed = $2 Hz  15.5 l/d diag" &
+  /home/scexao/bin/scexaostatusext "grid_st ${GEOMname} 0" &
+  /home/scexao/bin/scexaostatusext "grid_amp $1" &
+  /home/scexao/bin/scexaostatusext "grid_mod $2" &
+  /home/scexao/bin/scexaostatusext "grid_sep $sep" &
 
-tmux kill-session -t ${tmuxsession} &> /dev/null
-tmux new-session -d -s ${tmuxsession} 
-tmux send-keys -t ${tmuxsession} "cacao" C-m
-tmux send-keys -t ${tmuxsession} "readshmim dm${DMindex}disp09" C-m
-#tmux send-keys -t ${tmuxsession} "loadfits \"$GRIDFILE\" grid" C-m
-#tmux send-keys -t ${tmuxsession} "gridp=grid*$1/0.2" C-m
-#tmux send-keys -t ${tmuxsession} "gridm=0-gridp" C-m
-#tmux send-keys -t ${tmuxsession} "merge3d gridp gridm gridc" C-m
+  tmux kill-session -t ${tmuxsession} &> /dev/null
+  tmux new-session -d -s ${tmuxsession} 
+  tmux send-keys -t ${tmuxsession} "cacao" C-m
+  tmux send-keys -t ${tmuxsession} "readshmim dm${DMindex}disp09" C-m
+  #tmux send-keys -t ${tmuxsession} "loadfits \"$GRIDFILE\" grid" C-m
+  #tmux send-keys -t ${tmuxsession} "gridp=grid*$1/0.2" C-m
+  #tmux send-keys -t ${tmuxsession} "gridm=0-gridp" C-m
+  #tmux send-keys -t ${tmuxsession} "merge3d gridp gridm gridc" C-m
 
-if [ "$LOWLATENCYmode" = "1" ]; then
-tmux send-keys -t ${tmuxsession} "aolsetdmTrigChan ${DMindex} 9" C-m
-tmux send-keys -t ${tmuxsession} "aolsetdmTrigSem ${DMindex} 5" C-m
-tmux send-keys -t ${tmuxsession} "aolsetdmTrigMode ${DMindex} 1" C-m
-fi
+  if [ "$LOWLATENCYmode" = "1" ]; then
+    tmux send-keys -t ${tmuxsession} "aolsetdmTrigChan ${DMindex} 9" C-m
+    tmux send-keys -t ${tmuxsession} "aolsetdmTrigSem ${DMindex} 5" C-m
+    tmux send-keys -t ${tmuxsession} "aolsetdmTrigMode ${DMindex} 1" C-m
+  fi
 
-if [ "$LOWLATENCYmode" = "2" ]; then
-tmux send-keys -t ${tmuxsession} "aolsetdmTrigChan ${DMindex} 03" C-m # chan 03 is loop control
-tmux send-keys -t ${tmuxsession} "aolsetdmTrigSem ${DMindex} 5" C-m 
-tmux send-keys -t ${tmuxsession} "aolsetdmTrigMode ${DMindex} 1" C-m
-fi
+  if [ "$LOWLATENCYmode" = "2" ]; then
+    tmux send-keys -t ${tmuxsession} "aolsetdmTrigChan ${DMindex} 03" C-m # chan 03 is loop control
+    tmux send-keys -t ${tmuxsession} "aolsetdmTrigSem ${DMindex} 5" C-m 
+    tmux send-keys -t ${tmuxsession} "aolsetdmTrigMode ${DMindex} 1" C-m
+  fi
 
-if [ "$SYNCHRO" = "OFF" ]; then
-tmux send-keys -t ${tmuxsession} "aoloopcontroldmastrogseq grid0c 0 $AstroGridMode $AstroGridBin $NBcycle" C-m
-tmux send-keys -t ${tmuxsession} "gridc=grid0c*$1" C-m
-tmux send-keys -t ${tmuxsession} "savefits gridc \"!gridc.fits\"" C-m
-tmux send-keys -t ${tmuxsession} "tus=1000000/$2" C-m
+  if [ "$SYNCHRO" = "OFF" ]; then
+    if [ "${AstroGridMode}" = "99" ]; then
+      tmux send-keys -t ${tmuxsession} "readshmim gridc" C-m
+    else
+      tmux send-keys -t ${tmuxsession} "aoloopcontroldmastrogseq grid0c 0 $AstroGridMode $AstroGridBin $NBcycle" C-m
+      tmux send-keys -t ${tmuxsession} "gridc=grid0c*$1" C-m
+      tmux send-keys -t ${tmuxsession} "savefits gridc \"!gridc.fits\"" C-m      
+    fi
+    tmux send-keys -t ${tmuxsession} "tus=1000000/$2" C-m
 
-if [ "$LOWLATENCYmode" = "2" ]; then
-tmux send-keys -t ${tmuxsession} "# LOWLATENCYmode = $LOWLATENCYmode" C-m
-tmux send-keys -t ${tmuxsession} "readshmim dm${DMindex}disp03" C-m
-tmux send-keys -t ${tmuxsession} "creaimstream gridc dm${DMindex}disp09 tus 1 1 0 dm${DMindex}disp03 5 0" C-m
+    if [ "$LOWLATENCYmode" = "2" ]; then
+      tmux send-keys -t ${tmuxsession} "# LOWLATENCYmode = $LOWLATENCYmode" C-m
+      tmux send-keys -t ${tmuxsession} "readshmim dm${DMindex}disp03" C-m
+      tmux send-keys -t ${tmuxsession} "creaimstream gridc dm${DMindex}disp09 tus 1 1 0 dm${DMindex}disp03 5 0" C-m
+    else
+      tmux send-keys -t ${tmuxsession} "# LOWLATENCYmode = $LOWLATENCYmode" C-m
+      tmux send-keys -t ${tmuxsession} "creaimstream gridc dm${DMindex}disp09 tus 1 1 0 nullim 5 0" C-m
+    fi
+
+  else
+    tmux send-keys -t ${tmuxsession} "readshmim $SYNCstream" C-m
+    
+    if [ "${AstroGridMode}" = "99" ]; then
+      tmux send-keys -t ${tmuxsession} "readshmim gridc_000" C-m
+      tmux send-keys -t ${tmuxsession} "readshmim gridc_001" C-m
+    else
+      tmux send-keys -t ${tmuxsession} "aoloopcontroldmastrogseq grid0cA 0 $AGridModeA $AstroGridBin $NBcycle" C-m
+      tmux send-keys -t ${tmuxsession} "aoloopcontroldmastrogseq grid0cB 0 $AGridModeB $AstroGridBin $NBcycle" C-m
+      tmux send-keys -t ${tmuxsession} "gridc_000=grid0cA*$1" C-m
+      tmux send-keys -t ${tmuxsession} "gridc_001=grid0cB*$1" C-m
+      tmux send-keys -t ${tmuxsession} "savefits gridc_000 \"!gridcA.fits\"" C-m
+      tmux send-keys -t ${tmuxsession} "savefits gridc_001 \"!gridcB.fits\"" C-m
+    fi
+    tmux send-keys -t ${tmuxsession} "tus=1000000/$2" C-m
+    tmux send-keys -t ${tmuxsession} "creaimstream gridc dm${DMindex}disp09 tus 2 $SYNCperiod $SYNCoffset $SYNCstream $SYNCsemtrig 0" C-m
+  fi
+  
+  tmux send-keys -t ${tmuxsession} "exitCLI" C-m
+
 else
-tmux send-keys -t ${tmuxsession} "# LOWLATENCYmode = $LOWLATENCYmode" C-m
-tmux send-keys -t ${tmuxsession} "creaimstream gridc dm${DMindex}disp09 tus 1 1 0 nullim 5 0" C-m
-fi
 
-else
-tmux send-keys -t ${tmuxsession} "readshmim $SYNCstream" C-m
-tmux send-keys -t ${tmuxsession} "aoloopcontroldmastrogseq grid0cA 0 $AGridModeA $AstroGridBin $NBcycle" C-m
-tmux send-keys -t ${tmuxsession} "aoloopcontroldmastrogseq grid0cB 0 $AGridModeB $AstroGridBin $NBcycle" C-m
-tmux send-keys -t ${tmuxsession} "gridc_000=grid0cA*$1" C-m
-tmux send-keys -t ${tmuxsession} "gridc_001=grid0cB*$1" C-m
-tmux send-keys -t ${tmuxsession} "savefits gridc_000 \"!gridcA.fits\"" C-m
-tmux send-keys -t ${tmuxsession} "savefits gridc_001 \"!gridcB.fits\"" C-m
-tmux send-keys -t ${tmuxsession} "tus=1000000/$2" C-m
-tmux send-keys -t ${tmuxsession} "creaimstream gridc dm${DMindex}disp09 tus 2 $SYNCperiod $SYNCoffset $SYNCstream $SYNCsemtrig 0" C-m
-fi
-tmux send-keys -t ${tmuxsession} "exitCLI" C-m
+  /home/scexao/bin/dologext "ASTROGID OFF" &
+  /home/scexao/bin/scexaostatusext "grid_st OFF 1" &
 
-else
+  tmux send-keys -t ${tmuxsession} "" C-c
+  tmux send-keys -t ${tmuxsession} "exitCLI" C-m
+  tmux kill-session -t ${tmuxsession} &> /dev/null
 
-/home/scexao/bin/dologext "ASTROGID OFF" &
-/home/scexao/bin/scexaostatusext "grid_st OFF 1" &
+  /home/scexao/bin/dmdispzero 00 09
 
-tmux send-keys -t ${tmuxsession} "" C-c
-tmux send-keys -t ${tmuxsession} "exitCLI" C-m
-tmux kill-session -t ${tmuxsession} &> /dev/null
-
-/home/scexao/bin/dmdispzero 00 09
-
-# revert to default DM operation
+  # revert to default DM operation
 cacao << EOF
 aolsetdmTrigMode ${DMindex} 0
 exitCLI

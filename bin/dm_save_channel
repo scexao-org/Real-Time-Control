@@ -4,7 +4,9 @@ import os
 import sys
 import numpy as np
 from astropy.io import fits as pf
-from xaosim.scexao_shmlib import shm
+from pyMilk.interfacing.isio_shmlib import SHM as shm
+#from xaosim.scexao_shmlib import shm
+MILK_SHM_DIR = os.environ['MILK_SHM_DIR']
 
 home = os.getenv('HOME')
 
@@ -49,9 +51,9 @@ except:
 
 # -----------------------
 if chn != 12:
-    dmc  = shm('/tmp/dm00disp%02d.im.shm' % (chn,), verbose=False) # DM channel
+    dmc  = shm('%s/dm00disp%02d.im.shm' % (MILK_SHM_DIR,chn,), verbose=False) # DM channel
 else:
-    dmc  = shm('/tmp/dm00disp.im.shm', verbose=False) # DM channel
+    dmc  = shm('%s/dm00disp.im.shm' % (MILK_SHM_DIR,), verbose=False) # DM channel
     
 disp = dmc.get_data()
 offset = np.mean(disp)

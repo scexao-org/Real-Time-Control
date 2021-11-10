@@ -48,7 +48,7 @@ do
 	if ! (( ${IMCNT} % 50 )) ; then
 		echo "saving count ${IMCNT}"
 	fi
-	tmux send-keys -t ${tmuxname} "savefits $1 \"${TMP_FILE}\"" C-m
+	tmux send-keys -t ${tmuxname} "saveFITS $1 \"${TMP_FILE}\"" C-m
 
 	NEW_FILE=${SAVE_PATH}$1_${IMCNT}.fits
 	mv $TMP_FILE $NEW_FILE

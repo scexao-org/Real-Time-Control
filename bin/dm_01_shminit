@@ -1,0 +1,23 @@
+#!/bin/bash
+. $HOME/.profile
+
+echo "Pouet"
+echo $PATH
+
+# create arrays
+creashmim dm01disp 188 1
+creashmim dm01disp00 188 1
+creashmim dm01disp01 188 1
+creashmim dm01disp02 188 1
+creashmim dm01disp03 188 1
+creashmim dm01disp04 188 1
+creashmim dm01disp05 188 1
+creashmim dm01disp06 188 1
+creashmim dm01disp07 188 1
+creashmim dm01disp08 188 1
+creashmim dm01disp09 188 1
+creashmim dm01disp10 188 1
+creashmim dm01disp11 188 1
+
+exit
+

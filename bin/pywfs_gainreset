@@ -1,0 +1,4 @@
+#!/bin/bash
+
+ssh scexao@scexao1 "tmux send-keys -t ocam_ctrl \"gain_protection_reset()\" Enter"
+ssh scexao@scexao1 "tmux send-keys -t ocam_ctrl \"set_gain(1)\" Enter"

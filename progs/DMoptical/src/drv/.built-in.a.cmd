@@ -1,0 +1,1 @@
+cmd_/home/scexao/Real-Time-Control/progs/DMoptical/src/drv/built-in.a := rm -f /home/scexao/Real-Time-Control/progs/DMoptical/src/drv/built-in.a; ar cDPrST /home/scexao/Real-Time-Control/progs/DMoptical/src/drv/built-in.a 

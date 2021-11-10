@@ -61,10 +61,17 @@ if args != []:
         zoom = int(args[0])+1
         zoom = min(4,max(2,zoom))
 
+# pygame fps 1-20 - only used at very end of file
+FPS = 10
+if len(args) >= 2:
+    if isinstance(int(args[1]), int):
+        FPS = max(1., min(20., int(args[1])))
+
 # ------------------------------------------------------------------
 #                access to shared memory structures
 # ------------------------------------------------------------------
-cam = shm(MILK_SHM_DIR + "/ocam2d.im.shm", verbose=False)
+cam = shm("ocam2d", verbose=False)
+bias_shm = shm('aol0_wfsdark')
 
 # ------------------------------------------------------------------
 #                       global variables
@@ -79,7 +86,7 @@ mycmap = cm.gray
 pygame.display.init()
 pygame.font.init()
 
-FPS = 20                        # frames per second setting
+#FPS = 10                        # frames per second setting # set by argument at top
 fpsClock = pygame.time.Clock()  # start the pygame clock!
 XW, YW = xsize*zoom, (ysize+50)*zoom
 
@@ -369,6 +376,7 @@ while True: # the main game loop
             # close shared memory access
             # --------------------------
             cam.close()          # global disp map
+            bias_shm.close()
             print("Renocam has ended normally.")
             sys.exit()
         elif event.type == KEYDOWN:
@@ -395,10 +403,11 @@ while True: # the main game loop
                 if subt_bias:
                     bname = home+"/conf/renocam_aux/bias.fits"
                     try:
-                        bias = pf.getdata(bname)
+                        # bias = pf.getdata(bname)
+                        bias = bias_shm.get_data()
                     except:
                         bias = np.zeros_like(temp)
-
+                    
             if event.key == K_h:
                 mmods = pygame.key.get_mods()
                 print(hmsg)

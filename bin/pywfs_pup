@@ -1,5 +1,5 @@
 #!/bin/bash 
 cmdstr="/home/scexao/bin/devices/pywfs_pup $@"
 echo "Executing on scexao2: $cmdstr"
-ssh scexao@scexao2 "$cmdstr"
+ssh scexao@scexao2 "PATH=/home/scexao/anaconda3/bin/; $cmdstr"
 

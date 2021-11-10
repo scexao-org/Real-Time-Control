@@ -43,7 +43,7 @@ tmux send-keys -t ocamdecode "EOF" C-m
 
 sleep 2
 pidlist=$( pgrep ocamrundec|xargs echo | sed 's/ /,/g' )
-#echo $pidlist
+echo $pidlist
 sudo chrt -f -p 80 ${pidlist}
 
 pidlist=$( pgrep ocamrundec|xargs echo | sed 's/ /,/g' )

@@ -1,0 +1,77 @@
+#!/bin/bash
+
+vnum=$1
+
+if [[ $vnum -eq 0 ]]; then
+	port=30104
+elif [[ $vnum -eq 1 ]]; then
+	port=30105
+else
+	exit 1
+fi
+
+# aliases
+SC4="133.40.161.192"
+SC4fast="10.20.30.2"
+
+SC5tmux="streamTCPreceive_30107"
+
+tnew="tmux new-session -s"
+tsend="tmux send-keys -t"
+sc4tnew="ssh scexao@$SC4 $tnew"
+sc4tsend="ssh scexao@$sc4 $tsend"
+
+# Create tmuxes and issue kills
+$tnew streamTCPreceive_$port
+$tsend streamTCPreceive_$port C-c
+
+
+$sc4tnew sTCPtx-vcamim$vnum
+$sc4tsend sTCPtx-vcamim$vnum C-c
+
+
+exit 1
+
+echo ""
+read -p "Everything killed, proceed to startup ? Press enter to continue, Ctrl+C to abort."
+
+# STARTUP
+# First, OCAM serial
+$tsend ocam_serial "/opt/EDTpdv/serial_cmd -u 1" Enter
+$tsend ocam_serial "binning on" Enter
+$tsend ocam_serial "gain 1" Enter
+$tsend ocam_serial "protection reset" Enter
+$tsend ocam_serial "synchro on" Enter
+sleep 5
+# Then, EDT FG
+$tsend ocam_edt "/opt/EDTpdv/initcam -u 1 -f /home/scexao/src/camstack/config/ocam_bin2.cfg" Enter
+$tsend ocam_edt "/home/scexao/src/camstack/src/edttake -s ocam2krc -u 1 -l 0 -N 4 -8" Enter
+sleep 1
+# Then, ocamdecode
+$tsend ocam_decode "/home/scexao/src/camstack/ocamdecode/ocamdecoderun_mode 3" Enter
+# Then TCP, receiver, then transmitter
+ssh $SC5 "$tsend $SC5tmux \"shmimTCPreceive -c aol0COM 30107\" Enter"
+sleep .5
+$tsend ocam_tcp "OMP_NUM_THREADS=1 /home/scexao/bin/shmimTCPtransmit ocam2d 10.20.70.1 30107" Enter
+sleep 1
+
+# Then send the RT prio and cset setting
+PID=$(pgrep -f edttake)
+sudo cset proc --threads -m $PID ocam_edt > /dev/null
+sudo chrt -f -p 49 $PID > /dev/null
+
+PID=$(pgrep -f "cacao -n ocamdecode")
+sudo cset proc --threads -m $PID ocam_decode > /dev/null
+sudo chrt -f -p 48 $PID > /dev/null
+
+PID=$(pgrep -f shmimTCPtransmit-ocam2d)
+sudo cset proc --threads -m $PID ocam_tcp > /dev/null
+sudo chrt -f -p 47 $PID > /dev/null
+
+echo ""
+echo ""
+cset proc ocam_edt
+cset proc ocam_decode
+cset proc ocam_tcp
+
+echo "ocamstart completed."

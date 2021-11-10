@@ -82,7 +82,7 @@ mycmap = cm.gray
 pygame.display.init()
 pygame.font.init()
 
-FPS = 20                        # frames per second setting
+FPS = 5                        # frames per second setting
 fpsClock = pygame.time.Clock()  # start the pygame clock!
 XW, YW = 250*zoom+4*lsize+40*zoom, 150*zoom+3*lsize+10*zoom     # window size
 screen = pygame.display.set_mode((XW, YW), 0, 32)#FULLSCREEN, 32)
@@ -362,7 +362,6 @@ while True: # the main game loop
             print("dm_displee has ended normally.")
             sys.exit()
         elif event.type == KEYDOWN:
-
             if event.key == K_ESCAPE:
                 pygame.quit()
                 # close shared memory access
@@ -382,105 +381,21 @@ while True: # the main game loop
                 clr_scale = not clr_scale
                 update_all = True
 
-            if event.key == K_0:
+            clear_keys = [K_0, K_1, K_2, K_3, K_4, K_5, K_6, K_7, K_8, K_9, K_a, K_b]
+            if event.key in  clear_keys:
+                idx = clear_keys.index(event.key)
                 mmods = pygame.key.get_mods()
                 if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 00'")
-                    if dmflat > 0:
+                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dmdispzero 00 %02d"' % idx)
+                    # Specials
+                    if idx == 0 and dmflat > 0:
                         dmflat = 0
-                else:
-                    chi = 0
-                    update_all = True
-            
-            if event.key == K_1:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 01'")
-                else:
-                    chi = 1
-                    update_all = True
-            
-            if event.key == K_2:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 02'")
-                else:
-                    chi = 2
-                    update_all = True
-            
-            if event.key == K_3:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 03'")
-                else:
-                    chi = 3
-                    update_all = True
-            
-            if event.key == K_4:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 04'")
-                    if dmbull:
+                    if idx == 4 and dmbull:
                         dmbull = False
                 else:
-                    chi = 4
+                    chi = idx
                     update_all = True
-            
-            if event.key == K_5:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 05'")
-                else:
-                    chi = 5
-                    update_all = True
-            
-            if event.key == K_6:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 06'")
-                else:
-                    chi = 6
-                    update_all = True
-            
-            if event.key == K_7:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 07'")
-                else:
-                    chi = 7
-                    update_all = True
-            
-            if event.key == K_8:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 08'")
-                else:
-                    chi = 8
-                    update_all = True
-            
-            if event.key == K_9:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 09'")
-                else:
-                    chi = 9
-                    update_all = True
-            
-            if event.key == K_a:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 10'")
-                else:
-                    chi = 10
-                    update_all = True
-            
-            if event.key == K_b:
-                mmods = pygame.key.get_mods()
-                if (mmods & KMOD_LCTRL):
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 11'")
-                else:
-                    chi = 11
-                    update_all = True
+
             
             if event.key == K_c:
                 chi = 12
@@ -495,18 +410,18 @@ while True: # the main game loop
                 dmflat += 1
                 dmflat %= 3
                 if dmflat == 1:
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmflat'")
+                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dmflat"')
                 elif dmflat == 2:
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmflatAO188'")
+                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dmflatAO188"')
                 else:
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 00'")
+                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dmdispzero 00 00"')
 
             if event.key == K_y:
                 dmbull = not dmbull
                 if dmbull:
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dm_bullseye0 0.5 1.5'")
+                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dm_bullseye0 0.5 1.5"')
                 else:
-                    os.system("ssh scexao@scexao2 '/home/scexao/bin/dmdispzero 00 04'")
+                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dmdispzero 00 04"')
 
             if event.key == K_h:
                 print(hmsg)
