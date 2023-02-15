@@ -1,0 +1,72 @@
+#!/bin/env bash
+
+# Post boot stuff to do !
+# Symlinked into computer_config/bin/cc-rightafterboot-thiscomputer
+
+# This computer should be real-time at all times
+cc-systemconfig -P
+
+sudo mst start
+
+# EDT IRQ threads - use the same cset as their grabbers
+# Except Vampires, coz there's two and I don't want to be deciding
+# And they're slow and it doesn't matter
+# MUST KEEP DIRECT PHYSICAL NUMBERING (pci=routeirq?)
+sudo cset proc -m -k --force -p $(pgrep 28-edt) ocam_edt
+sudo cset proc -m -k --force -p $(pgrep 32-edt) kcam_edt
+sudo cset proc -m -k --force -p $(pgrep 38-edt) rajni_edt
+sudo cset proc -m -k --force -p $(pgrep 39-edt) chuck_edt
+sudo cset proc -m -k --force -p $(pgrep 40-edt) glint_edt
+sudo cset proc -m -k --force -p $(pgrep 44-aslenum) orca_fgrab
+
+# Give SCHED_FIFO 49
+EDT_IRQ_THREADS=$(pgrep "\-edt")
+for PID in ${EDT_IRQ_THREADS}; do
+	sudo chrt -f -p 49 ${PID}
+done
+ASL_CXP_IRQ_THREAD=$(pgrep "\-aslenum")
+for PID in ${ASL_CXP_IRQ_THREADS}; do
+	sudo chrt -f -p 49 ${PID}
+done
+
+# Now the IRQ itself
+CORE=$(cset set | grep ocam_edt | awk '{print $2}')
+echo ${CORE} | sudo tee /proc/irq/28/smp_affinity_list
+CORE=$(cset set | grep kcam_edt | awk '{print $2}')
+echo ${CORE} | sudo tee /proc/irq/32/smp_affinity_list
+CORE=$(cset set | grep rajni_edt | awk '{print $2}')
+echo ${CORE} | sudo tee /proc/irq/38/smp_affinity_list
+CORE=$(cset set | grep chuck_edt | awk '{print $2}')
+echo ${CORE} | sudo tee /proc/irq/39/smp_affinity_list
+CORE=$(cset set | grep glint_edt | awk '{print $2}')
+echo ${CORE} | sudo tee /proc/irq/40/smp_affinity_list
+
+CORE=$(cset set | grep orca_fgrab | awk '{print $2}')
+echo ${CORE} | sudo tee /proc/irq/44/smp_affinity_list
+
+# MLX5 and Mobo net tx/rx queue threads to txshield + SCHED_FIFO 60
+
+NET_IRQS=$(ps aux | grep irq | grep enp1 | awk '{print $2}')
+for PID in ${NET_IRQS}; do
+	sudo cset proc -m -k --force -p ${PID} txshield
+	sudo chrt -f -p 60 ${PID}
+done
+
+NET_IRQS_2=$(ps aux | grep irq | grep mlx5_co | awk '{print $2}')
+for PID in ${NET_IRQS_2}; do
+        sudo cset proc -m -k --force -p ${PID} txshield
+	sudo chrt -f -p 60 ${PID}
+done
+
+# Take ownership of firebird CXP framegrabbers
+sudo chown scexao:scexao /dev/aslenum*
+
+# Start the cameras !
+cam-buffystart
+cam-chuckstart
+cam-glintstart
+cam-ocamstart
+cam-rajnistart
+
+
+cam-vcamautostart
