@@ -9,12 +9,18 @@
 #                            |_|            |___/  #
 # ------------------------------------------------ #
 
+import os
+_CORES = os.sched_getaffinity(0) # Go around pygame import
+
 import pygame, sys
 from pygame.locals import *
+
+# Pygame import (on AMD Epyc) make affinity drop to CPU 0 only !
+os.sched_setaffinity(0, _CORES) # Fix the CPU affinity
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import pdb
 import threading
 import mmap
 import struct
@@ -86,7 +92,7 @@ FPS = 5                        # frames per second setting
 fpsClock = pygame.time.Clock()  # start the pygame clock!
 XW, YW = 250*zoom+4*lsize+40*zoom, 150*zoom+3*lsize+10*zoom     # window size
 screen = pygame.display.set_mode((XW, YW), 0, 32)#FULLSCREEN, 32)
-pygame.display.set_caption('DM multi-channel display!')
+pygame.display.set_caption("NENE's DM multi-channel display!")
 cntloop = 0                    # counter
 
 # ------------------------------------------------------------------
@@ -201,7 +207,7 @@ myfont = pygame.font.Font('freesansbold.ttf', fontsize)
 fontsize2 = 10+(zoom-2)*3
 myfont2 = pygame.font.Font('freesansbold.ttf', fontsize2) 
 
-path_cartoon = "/home/scexao/conf/dm_displee_aux/bruce_lee%d.png" % (zoom,)
+path_cartoon = "/home/scexao/conf/dm_displee_aux/Nene%d.png" % (zoom,)
 cartoon1 = pygame.image.load(path_cartoon).convert_alpha()
 rect_cartoon = cartoon1.get_rect()
 rect_cartoon.topright = XW+9*zoom, 41*zoom
@@ -359,7 +365,7 @@ while True: # the main game loop
             disp.close()
             volt.close()
 
-            print("dm_displee has ended normally.")
+            print("dm_display has ended normally.")
             sys.exit()
         elif event.type == KEYDOWN:
             if event.key == K_ESCAPE:
@@ -372,7 +378,7 @@ while True: # the main game loop
                 disp.close()
                 volt.close()
 
-                print("dm_displee has ended normally.")
+                print("dm_display has ended normally.")
                 sys.exit()
 
             # Color/grayscale map
@@ -386,7 +392,7 @@ while True: # the main game loop
                 idx = clear_keys.index(event.key)
                 mmods = pygame.key.get_mods()
                 if (mmods & KMOD_LCTRL):
-                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dmdispzero 00 %02d"' % idx)
+                    os.system('ssh sc2 "source .profile; /home/scexao/bin/dmdispzero 00 %02d"' % idx)
                     # Specials
                     if idx == 0 and dmflat > 0:
                         dmflat = 0
@@ -410,18 +416,18 @@ while True: # the main game loop
                 dmflat += 1
                 dmflat %= 3
                 if dmflat == 1:
-                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dmflat"')
+                    os.system('ssh sc2 "source .profile; /home/scexao/bin/dmflat"')
                 elif dmflat == 2:
-                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dmflatAO188"')
+                    os.system('ssh sc2 "source .profile; /home/scexao/bin/dmflatAO188"')
                 else:
-                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dmdispzero 00 00"')
+                    os.system('ssh sc2 "source .profile; /home/scexao/bin/dmdispzero 00 00"')
 
             if event.key == K_y:
                 dmbull = not dmbull
                 if dmbull:
-                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dm_bullseye0 0.5 1.5"')
+                    os.system('ssh sc2 "source .profile; /home/scexao/bin/dm_bullseye0 0.5 1.5"')
                 else:
-                    os.system('ssh scexao@scexao2 "source .profile; /home/scexao/bin/dmdispzero 00 04"')
+                    os.system('ssh sc2 "source .profile; /home/scexao/bin/dmdispzero 00 04"')
 
             if event.key == K_h:
                 print(hmsg)
