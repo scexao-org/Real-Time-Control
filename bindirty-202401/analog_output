@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cmdstr="/home/scexao/bin/devices/analog_output.py $1 $2 $3"
+echo "Executing on scexao2: $cmdstr"
+
+ssh sc2 "export PATH=/home/scexao/anaconda3/bin/:$PATH; source .profile; $cmdstr" &

@@ -14,6 +14,6 @@ fi
 pname=$0
 cacao -n $pname << EOF
 readshmim $1
-savefits $1 "!$2"
+saveFITS $1 "!$2"
 exit
 EOF

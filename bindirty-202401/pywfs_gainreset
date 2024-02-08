@@ -1,0 +1,11 @@
+#!/bin/bash
+
+cmdstr="tmux send-keys -t ocam_ctrl \"gain_protection_reset()\" Enter"
+echo "Executing on scexao5: $cmdstr"
+
+ssh sc5 "$cmdstr"
+
+cmdstr="tmux send-keys -t ocam_ctrl \"set_gain(1)\" Enter"
+echo "Executing on scexao5: $cmdstr"
+
+ssh sc5 "$cmdstr"

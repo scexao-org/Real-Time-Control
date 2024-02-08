@@ -92,15 +92,13 @@ try:
         if abs(asx) > threshold:
             x_m = int(m.copysign(10, asx))
             print("x:",x_m)
-            os.system("ssh scexao@scexao2 \"/home/scexao/bin/devices/dm_stage x push %+i\"" %x_m)
+            os.system("ssh scexao@133.40.162.192 \"/home/scexao/bin/devices/dm_stage theta push %+i\"" %x_m)
             time.sleep(0.1)
-            #os.system("ssh scexao@scexao2 \"/home/scexao/bin/log DM offload: offloading y %+i\"" %x_m)
         if abs(asy) > threshold:
-            y_m = int(m.copysign(10, asy))
+            y_m = -int(m.copysign(10, asy))
             print("y:",y_m)
-            os.system("ssh scexao@scexao2 \"/home/scexao/bin/devices/dm_stage y push %+i\"" %y_m)
+            os.system("ssh scexao@133.40.162.192 \"/home/scexao/bin/devices/dm_stage phi push %+i\"" %y_m)
             time.sleep(0.1)
-            #os.system("ssh scexao@scexao2 \"/home/scexao/bin/log DM offload: offloading x %+i\"" %y_m)
     shm_im.close()
     os.system("dologext \"DM offload: procedure stopped\"")
     os.system("scexaostatusext \"dmoffload 'OPEN' 3\"")

@@ -1,0 +1,3 @@
+#! /bin/bash
+
+ssh sc2 "/home/scexao/bin/log $@"

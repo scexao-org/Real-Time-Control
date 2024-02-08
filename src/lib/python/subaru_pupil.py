@@ -44,18 +44,38 @@ import matplotlib.pyplot as plt
 # dist() functions is the Hacked up adaptation of the IDL dist() command
 #------------------------------------------------------------------------
 
-def dist((n,m),(offsetn,offsetm)=(0,0)):
+#def dist((n,m),(offsetn,offsetm)=(0,0)):
+#
+#    '''Hacked up adaptation of the IDL dist command
+#    '''
+#    x2=(np.arange(n, dtype=float)-n/2+offsetn)**2
+#    y2=(np.arange(m, dtype=float)-m/2+offsetm)**2
+#    a=np.empty((n,m))
+#    for i in np.arange(m):
+#        a[:,i]=x2
+#    for i in np.arange(n):
+#        a[i,:]+=y2
+#    return np.sqrt(a)
+
+## New dist function from Seb :
+def dist(n,m):
+    #------------------------------------------------------------------------
+    # dist() functions is the Hacked up adaptation of the IDL dist() command
+    #------------------------------------------------------------------------
 
     '''Hacked up adaptation of the IDL dist command
     '''
-    x2=(np.arange(n, dtype=float)-n/2+offsetn)**2
-    y2=(np.arange(m, dtype=float)-m/2+offsetm)**2
+    n = np.int(n)
+    m = np.int(m)
+    x2=np.roll((np.arange(n, dtype=float)-np.int(n/2))**2, np.int(n/2))
+    y2=np.roll((np.arange(m, dtype=float)-np.int(m/2))**2, np.int(m/2))
     a=np.empty((n,m))
     for i in np.arange(m):
         a[:,i]=x2
     for i in np.arange(n):
         a[i,:]+=y2
     return np.sqrt(a)
+
 
 
 #--------------------------------------------------------------

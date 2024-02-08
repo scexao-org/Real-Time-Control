@@ -1,0 +1,15 @@
+#!/bin/bash
+
+CPUSET=aol0log
+
+
+echo $(date)
+for pid in $(pgrep streamFITSlog); do
+	echo "Moving PID ${pid} $(ps ${pid} | tail -n 1)"
+	# /dev/null : DO NOT dump excess text inside a "watch" inside a tmux: it will stall and not work!!!
+	milk-exec "csetandprioext ${pid} ${CPUSET} 0" > /dev/null
+done
+
+cset proc ${CPUSET}
+
+#pgrep logshim | xargs -I {} -d '\n' milk-exec "csetandprioext {} ${CPUSET} 0"

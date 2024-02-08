@@ -140,12 +140,12 @@ def psdrad(signal, npoints, nshift, nangle, fsamp):
     
     s = np.shape(signal)
     if len(s) != 2:
-        print "wrong dimensions"
+        print("wrong dimensions")
         sys.exit()
     else:
         ndim = s[1]
         if ndim != 2:
-            print "wrong dimensions"
+            print("wrong dimensions")
             sys.exit()
         ntot = s[0]
     

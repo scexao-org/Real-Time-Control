@@ -18,6 +18,7 @@ from pygame.locals import *
 # Pygame import (on AMD Epyc) make affinity drop to CPU 0 only !
 os.sched_setaffinity(0, _CORES) # Fix the CPU affinity
 
+import time
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -245,7 +246,7 @@ pygame.display.update()
 
 
 while True: # the main game loop
-
+    time.sleep(0.00000001)
     mycmap = cm.jet
     if clr_scale:
         mycmap = cm.inferno
